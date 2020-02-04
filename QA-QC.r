@@ -6,9 +6,9 @@ data_Prep <-readxl::read_excel(files, range = "TX_PVLS_DATIM!A7:GG1664")
 has.neg <- data.frame(Negatives=apply(data_Prep[,-(1:12)], 1, function(row) any(row < 0,na.rm=TRUE)))
 Length_Outlet_IDs<-nchar(data_Prep$col_8)
 
-has.blanks_IMCode <- data.frame(BlanksIMCode=apply(data_Prep[,10], 1, function(row) any(is.na(row))))
-has.blanks_DATIMOutletID <- data.frame(BlanksDATIMOutletID=apply(data_Prep[,8], 1, function(row) any(is.na(row))))
-has.blanks_TypeOfSupport <- data.frame(BlanksTypeOfSupport=apply(data_Prep[,9], 1, function(row) any(is.na(row))))
+has.blanks_IMCode <- data.frame(BlanksIMCode=apply(data_Prep[10], 1, function(row) any(is.na(row))))
+has.blanks_DATIMOutletID <- data.frame(BlanksDATIMOutletID=apply(data_Prep[8], 1, function(row) any(is.na(row))))
+has.blanks_TypeOfSupport <- data.frame(BlanksTypeOfSupport=apply(data_Prep[9], 1, function(row) any(is.na(row))))
 
 #final dataframe
 data_Prep_Negatives <-cbind(data_Prep,has.neg,Length_Outlet_IDs,has.blanks_IMCode,has.blanks_DATIMOutletID,has.blanks_TypeOfSupport)
