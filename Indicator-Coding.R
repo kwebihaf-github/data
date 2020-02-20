@@ -1,8 +1,23 @@
 ## shaping function, start ##
 
+# -- place numeric codes on top of the data columns instead of the concatenated values, i.e datalementuid;disagguid
+
+# lookup files: DSD, TA & IMs
+File <- "/cloud/project/files/FY2020Q1/lookups/FY2020_Community_DSD_lookups.csv"
+DSD.lookup<-read.csv(File, header=TRUE,sep=",",check.names = FALSE,stringsAsFactors=FALSE)
+TA.lookup
+IM.lookup<-read.csv(url("https://www.datim.org/api/sqlViews/fgUtV6e9YIX/data.csv"), header=TRUE,sep=",",check.names = FALSE,stringsAsFactors=FALSE)
+IM.lookup <- dplyr::select(IM.lookup,"code","uid")
+colnames(IM.lookup)<-mgsub(c("code","uid"),c("IM_code","attributeOptionCombo"),colnames(IM.lookup))
+
+IM.lookup<-read.csv(File, header=TRUE,sep=",",check.names = FALSE,stringsAsFactors=FALSE)
+#testDataset<-read.csv(File, header=TRUE,sep=",",check.names = FALSE,stringsAsFactors=FALSE)
+#testDataset <- (merge(IM.lookup, testDataset, by.x = 'IM_code', by.y = 'Mechanism Code', all.y=TRUE))
+
+
 #install.packages(c("data.table","reshape2","tidyr","plyr","dplyr"))
 shaping <-function(file, supporttype, outputfile, ...) {
-
+  
   setwd("/cloud/project/files/tests")
   #setwd("/cloud/project/files/coding")
   #data<-read.csv(file, header=TRUE,sep=",",check.names = FALSE,stringsAsFactors=FALSE)
@@ -15,7 +30,7 @@ shaping <-function(file, supporttype, outputfile, ...) {
   #sum(as.numeric(as.character(data.m.split$value)),na.rm=T)
   #data.split.supportType<-split(data.m.split, data.m.split$`Type of Support`)
   #data.split.supportType<-split(data.m, data.m$`Type of Support`)
-
+  
   if (supporttype=='1') {  # both DSD & TA
     #data.m.split <-tidyr::separate(data = data.m, col = variable, into = c("Indicator_code", "Disagg"), sep = "\\;")
     data.split.supportType<-split(data.m, data.m$`Type of Support`)
@@ -25,21 +40,26 @@ shaping <-function(file, supporttype, outputfile, ...) {
     base2.TA <- (merge(TA.lookup, TA, by = 'Indicator_code', by.y = 'variable', all.y=TRUE))
     #names(base1.DSD)[names(base1.DSD) == 'RETURN_FIELD_DSD'] <- 'RETURN_FIELD'
     #names(base2.TA)[names(base2.TA) == 'RETURN_FIELD_TA'] <- 'RETURN_FIELD'
-
+    
     #colnames(DATIM4U.Dataelements)<-mgsub(c("DeCoC","DataelementDisagg"),c("DeCoC2","DataelementDisagg2"),colnames(DATIM4U.Dataelements))
-
+    
     colnames(base1.DSD)<-mgsub(c("RETURN_FIELD_DSD"),c("RETURN_FIELD"),colnames(base1.DSD))
     colnames(base2.TA)<-mgsub(c("RETURN_FIELD_TA"),c("RETURN_FIELD"),colnames(base2.TA))
-
+    
     merge <- rbind(base1.DSD, base2.TA)
     merge.split<-tidyr::separate(data = merge, col = RETURN_FIELD, into = c("dataElement", "categoryOptionCombo"), sep = "\\;")
-    merge.split <- merge.split[, c("dataElement","period","Outlet_ID","categoryOptionCombo","Mechanism ID","value")]
+    merge.split <- merge.split[, c("dataElement","period","Outlet_ID","categoryOptionCombo","Mechanism Code","value")]
+    
+    #merge.split <- merge.split[, c("dataElement","period","Outlet_ID","categoryOptionCombo","Mechanism ID","value")]
     #names(merge.split)[c("DATIM HFID","COP 2016  Mechanism ID")] <- c("orgUnit","IM_code")
     #colnames(merge.split)[colnames(merge.split)=="DATIM orgUnitID"] <- "orgUnit"
     #colnames(merge.split)[colnames(merge.split)=="Mechanism ID"] <- "IM_code"
-
-    colnames(merge.split)<-mgsub(c("Outlet_ID","Mechanism ID"),c("orgUnit","attributeOptionCombo"),colnames(merge.split))
-
+    
+    merge.split <- (merge(IM.lookup, merge.split, by.x = 'IM_code', by.y = 'Mechanism Code', all.y=TRUE))
+    
+    colnames(merge.split)<-mgsub(c("Outlet_ID"),c("orgUnit"),colnames(merge.split))
+    #colnames(merge.split)<-mgsub(c("Outlet_ID","Mechanism ID"),c("orgUnit","attributeOptionCombo"),colnames(merge.split))
+    
     #setNames(merge.split,c("DATIM HFID","COP 2016  Mechanism ID"),c("orgUnit","IM_code"))
     #names(merge.split)[c(5,7)] <- c("orgUnit","IM_code")
     #merge.split<- merge.split[, -c(1,6,8)]COP 2016  Mechanism ID
@@ -62,32 +82,37 @@ shaping <-function(file, supporttype, outputfile, ...) {
     #sum(as.numeric(as.character(ImportReady.aggregate$value)))
     #write.csv(ImportReady.aggregate,file=paste0('/cloud/project/files',outputfile,".csv"),row.names = FALSE)
     write.csv(ImportReady.aggregate,paste0(outputfile,".csv"),row.names = FALSE)
-
-
+    
+    
   }
   else if (supporttype=='2'){   # DSD only
     #data.m.split <-tidyr::separate(data = data.m, col = variable, into = c("dataElement", "categoryOptionCombo"), sep = "\\;")
     data.split.supportType<-split(data.m, data.m$`Type of Support`)
     DSD <- data.split.supportType[[1]]
-
+    
     base1.DSD <- (merge(DSD.lookup, DSD, by.x = 'Indicator_code', by.y = 'variable', all.y=TRUE))
     colnames(base1.DSD)<-mgsub(c("RETURN_FIELD_DSD"),c("RETURN_FIELD"),colnames(base1.DSD))
     DSD<-tidyr::separate(data = base1.DSD, col = RETURN_FIELD, into = c("dataElement", "categoryOptionCombo"), sep = "\\;")
-    DSD <- DSD[, c("dataElement","period","Outlet_ID","categoryOptionCombo","Mechanism ID","value")]
-
+    DSD <- DSD[, c("dataElement","period","Outlet_ID","categoryOptionCombo","Mechanism Code","value")]
+    
     #DSD <- data.m.split
-    #DSD <- data.split.supportType[[1]]
-    #base1.DSD <- (merge(DSD.lookup, DSD, by = 'Indicator_code'))
-    #base1.DSD <- (merge(DSD, DSD.lookup, by = 'Indicator_code'))
-    #names(base1.DSD)[names(base1.DSD) == 'RETURN_FIELD_DSD'] <- 'RETURN_FIELD'
+    #DSD <- data.split.supportType[[1]]   
+    #base1.DSD <- (merge(DSD.lookup, DSD, by = 'Indicator_code')) 
+    #base1.DSD <- (merge(DSD, DSD.lookup, by = 'Indicator_code'))  
+    #names(base1.DSD)[names(base1.DSD) == 'RETURN_FIELD_DSD'] <- 'RETURN_FIELD' 
     #colnames(base1.DSD)<-mgsub(c("RETURN_FIELD_DSD"),c("RETURN_FIELD"),colnames(base1.DSD))
-    #merge <- rbind(base1.DSD)
+    #merge <- rbind(base1.DSD) 
     # merge <- base1.DSD
     # merge.split<-tidyr::separate(data = merge, col = RETURN_FIELD, into = c("dataElement", "categoryOptionCombo"), sep = "\\;")
-   #DSD <- DSD[, c("dataElement","period","Outlet_ID","categoryOptionCombo","Mechanism ID","value")]
+    #DSD <- DSD[, c("dataElement","period","Outlet_ID","categoryOptionCombo","Mechanism ID","value")]
     #colnames(merge.split)[colnames(merge.split)=="DATIM orgUnitID"] <- "orgUnit"
     #colnames(merge.split)[colnames(merge.split)=="Mechanism ID"] <- "IM_code"
-    colnames(DSD)<-mgsub(c("Outlet_ID","Mechanism ID"),c("orgUnit","attributeOptionCombo"),colnames(DSD))
+    
+    DSD <- (merge(IM.lookup, DSD, by.x = 'IM_code', by.y = 'Mechanism Code', all.y=TRUE))
+    
+    colnames(DSD)<-mgsub(c("Outlet_ID"),c("orgUnit"),colnames(DSD))
+    
+    #colnames(DSD)<-mgsub(c("Outlet_ID","Mechanism ID"),c("orgUnit","attributeOptionCombo"),colnames(DSD))
     #ImportReady<- (merge(DSD, Mechanism.lookup, by = 'IM_code'))
     #ImportReady$IM_code <- NULL
     ImportReady <- DSD
@@ -101,12 +126,12 @@ shaping <-function(file, supporttype, outputfile, ...) {
                                            "dataElement","period","orgUnit","categoryOptionCombo","attributeOptionCombo","value")
     #write.csv(ImportReady.aggregate,file=paste0('/cloud/project/files',outputfile,".csv"),row.names = FALSE)
     write.csv(ImportReady.aggregate,paste0(outputfile,".csv"),row.names = FALSE)
-
+    
   }
   else if(supporttype=='3'){  # other support type
-    other <- data.split.supportType[[1]]
-    base1.other <- (merge(other.lookup, other, by = 'Indicator_code'))
-    #names(base1.DSD)[names(base1.DSD) == 'RETURN_FIELD_DSD'] <- 'RETURN_FIELD'
+    other <- data.split.supportType[[1]]   
+    base1.other <- (merge(other.lookup, other, by = 'Indicator_code'))  
+    #names(base1.DSD)[names(base1.DSD) == 'RETURN_FIELD_DSD'] <- 'RETURN_FIELD' 
     colnames(base1.other)<-mgsub(c("RETURN_FIELD_Other"),c("RETURN_FIELD"),colnames(base1.other))
     #merge <- rbind(base1.other)
     merge <- base1.other
@@ -126,13 +151,13 @@ shaping <-function(file, supporttype, outputfile, ...) {
     #    "dataElement","period","orgUnit","categoryOptionCombo","attributeOptionCombo","value")
     #write.csv(ImportReady.aggregate,file=paste0('/cloud/project/files',outputfile,".csv"),row.names = FALSE)
     write.csv(ImportReady.aggregate,paste0(outputfile,".csv"),row.names = FALSE)
-
-
+    
+    
   }
   else if(supporttype=='4'){  # CD4 support type
-    cd4 <- data.split.supportType[[1]]
-    base1.cd4 <- (merge(cd4.lookup, cd4, by = 'Indicator_code'))
-    #names(base1.DSD)[names(base1.DSD) == 'RETURN_FIELD_DSD'] <- 'RETURN_FIELD'
+    cd4 <- data.split.supportType[[1]]   
+    base1.cd4 <- (merge(cd4.lookup, cd4, by = 'Indicator_code'))  
+    #names(base1.DSD)[names(base1.DSD) == 'RETURN_FIELD_DSD'] <- 'RETURN_FIELD' 
     colnames(base1.cd4)<-mgsub(c("RETURN_FIELD_CD4"),c("RETURN_FIELD"),colnames(base1.cd4))
     #merge <- rbind(base1.other)
     merge <- base1.cd4
@@ -152,13 +177,13 @@ shaping <-function(file, supporttype, outputfile, ...) {
     #    "dataElement","period","orgUnit","categoryOptionCombo","attributeOptionCombo","value")
     #write.csv(ImportReady.aggregate,file=paste0('/cloud/project/files',outputfile,".csv"),row.names = FALSE)
     write.csv(ImportReady.aggregate,paste0(outputfile,".csv"),row.names = FALSE)
-
-
+    
+    
   }
   else if(supporttype=='5'){  # TB AFB support type
-    tb_afb <- data.split.supportType[[1]]
-    base1.tb_afb<- (merge(tb_afb.lookup, tb_afb, by = 'Indicator_code'))
-    #names(base1.DSD)[names(base1.DSD) == 'RETURN_FIELD_DSD'] <- 'RETURN_FIELD'
+    tb_afb <- data.split.supportType[[1]]   
+    base1.tb_afb<- (merge(tb_afb.lookup, tb_afb, by = 'Indicator_code'))  
+    #names(base1.DSD)[names(base1.DSD) == 'RETURN_FIELD_DSD'] <- 'RETURN_FIELD' 
     colnames(base1.tb_afb)<-mgsub(c("RETURN_FIELD_TB_AFB"),c("RETURN_FIELD"),colnames(base1.tb_afb))
     #merge <- rbind(base1.other)
     merge <- base1.tb_afb
@@ -178,13 +203,13 @@ shaping <-function(file, supporttype, outputfile, ...) {
     #    "dataElement","period","orgUnit","categoryOptionCombo","attributeOptionCombo","value")
     #write.csv(ImportReady.aggregate,file=paste0('/cloud/project/files',outputfile,".csv"),row.names = FALSE)
     write.csv(ImportReady.aggregate,paste0(outputfile,".csv"),row.names = FALSE)
-
-
+    
+    
   }
   else if(supporttype=='6'){  # HIV support type
-    hiv <- data.split.supportType[[1]]
-    base1.hiv<- (merge(hiv.lookup, hiv, by = 'Indicator_code'))
-    #names(base1.DSD)[names(base1.DSD) == 'RETURN_FIELD_DSD'] <- 'RETURN_FIELD'
+    hiv <- data.split.supportType[[1]]   
+    base1.hiv<- (merge(hiv.lookup, hiv, by = 'Indicator_code'))  
+    #names(base1.DSD)[names(base1.DSD) == 'RETURN_FIELD_DSD'] <- 'RETURN_FIELD' 
     colnames(base1.hiv)<-mgsub(c("RETURN_FIELD_HIV"),c("RETURN_FIELD"),colnames(base1.hiv))
     #merge <- rbind(base1.other)
     merge <- base1.hiv
@@ -204,13 +229,13 @@ shaping <-function(file, supporttype, outputfile, ...) {
     #    "dataElement","period","orgUnit","categoryOptionCombo","attributeOptionCombo","value")
     #write.csv(ImportReady.aggregate,file=paste0('/cloud/project/files',outputfile,".csv"),row.names = FALSE)
     write.csv(ImportReady.aggregate,paste0(outputfile,".csv"),row.names = FALSE)
-
-
+    
+    
   }
   else if(supporttype=='7'){  # TB Xpert support type
-    tb_xpert <- data.split.supportType[[1]]
-    base1.tb_xpert<- (merge(tb_xpert.lookup, tb_xpert, by = 'Indicator_code'))
-    #names(base1.DSD)[names(base1.DSD) == 'RETURN_FIELD_DSD'] <- 'RETURN_FIELD'
+    tb_xpert <- data.split.supportType[[1]]   
+    base1.tb_xpert<- (merge(tb_xpert.lookup, tb_xpert, by = 'Indicator_code'))  
+    #names(base1.DSD)[names(base1.DSD) == 'RETURN_FIELD_DSD'] <- 'RETURN_FIELD' 
     colnames(base1.tb_xpert)<-mgsub(c("RETURN_FIELD_TB_Xpert"),c("RETURN_FIELD"),colnames(base1.tb_xpert))
     #merge <- rbind(base1.other)
     merge <- base1.tb_xpert
@@ -230,14 +255,14 @@ shaping <-function(file, supporttype, outputfile, ...) {
     #    "dataElement","period","orgUnit","categoryOptionCombo","attributeOptionCombo","value")
     #write.csv(ImportReady.aggregate,file=paste0('/cloud/project/files',outputfile,".csv"),row.names = FALSE)
     write.csv(ImportReady.aggregate,paste0(outputfile,".csv"),row.names = FALSE)
-
-
+    
+    
   }
   else{           # TB Culture support type
-
-    tb_culture <- data.split.supportType[[1]]
-    base1.tb_culture<- (merge(tb_culture.lookup, tb_culture, by = 'Indicator_code'))
-    #names(base1.DSD)[names(base1.DSD) == 'RETURN_FIELD_DSD'] <- 'RETURN_FIELD'
+    
+    tb_culture <- data.split.supportType[[1]]   
+    base1.tb_culture<- (merge(tb_culture.lookup, tb_culture, by = 'Indicator_code'))  
+    #names(base1.DSD)[names(base1.DSD) == 'RETURN_FIELD_DSD'] <- 'RETURN_FIELD' 
     colnames(base1.tb_culture)<-mgsub(c("RETURN_FIELD_TB_Culture"),c("RETURN_FIELD"),colnames(base1.tb_culture))
     #merge <- rbind(base1.other)
     merge <- base1.tb_culture
@@ -259,13 +284,13 @@ shaping <-function(file, supporttype, outputfile, ...) {
     write.csv(ImportReady.aggregate,paste0(outputfile,".csv"),row.names = FALSE)
   }
   #colnames(merge.split)
- #print (sum(as.numeric(as.character(data.m.split$value)),na.rm=T))
+  #print (sum(as.numeric(as.character(data.m.split$value)),na.rm=T))
   print (sum(as.numeric(as.character(data.m$value)),na.rm=T))
   print (sum(as.numeric(as.character(ImportReady.aggregate$value))))
   setwd("/cloud/project/")
   #assertthat::assert_that(sum(as.numeric(as.character(data.m.split$value)),na.rm=T)==sum(as.numeric(as.character(ImportReady.aggregate$value))))
   #sum(as.numeric(as.character(ImportReady$value)))
-
+  
 }
 
 ## shaping function, end ##
