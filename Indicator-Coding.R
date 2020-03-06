@@ -22,6 +22,12 @@ shaping <-function(file, supporttype, outputfile, ...) {
   #setwd("/cloud/project/files/coding")
   #data<-read.csv(file, header=TRUE,sep=",",check.names = FALSE,stringsAsFactors=FALSE)
   data<-data.table::fread(file, header=TRUE,sep=",",check.names = FALSE,stringsAsFactors=FALSE,quote="\"")
+  duplicate_columns <-names(data)[duplicated(names(data))]
+  col_indexes <-which(colnames(data)==duplicate_columns)
+  if(length(col_indexes>=1))
+  {
+    stop(paste0("These are the duplicate column indexes: ", col_indexes, sep=" "))
+  }
   data.m <- reshape2::melt(data, id=c(1:4)) # the rest of the columns are measure.vars
   data.m$value <- as.numeric(gsub(',', '', data.m$value))
   #data.m.split <-tidyr::separate(data = data.m, col = variable, into = c("Indicator_code", "Disagg"), sep = "\\;")
