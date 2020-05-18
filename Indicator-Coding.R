@@ -2,18 +2,36 @@
 
 # -- place numeric codes on top of the data columns instead of the concatenated values, i.e datalementuid;disagguid
 
+## Running the shaping function, howto
+
+shaping("/cloud/project/files/for-codings/FY2020Q1/FY2020Q1_TB_STAT_ReImports-All.csv",1,"01.DATIM4U.FY2020Q1.ImportReady.TB_STAT_ReImports-All")
+
+
+## Running the shaping function, howto, end
+
 # lookup files: DSD, TA & IMs
-File <- "/cloud/project/files/FY2020Q1/lookups/FY2020_Community_DSD_lookups.csv"
-DSD.lookup<-read.csv(File, header=TRUE,sep=",",check.names = FALSE,stringsAsFactors=FALSE)
-TA.lookup
-IM.lookup<-read.csv(url("https://www.datim.org/api/sqlViews/fgUtV6e9YIX/data.csv"), header=TRUE,sep=",",check.names = FALSE,stringsAsFactors=FALSE)
+FileDSD <- "/cloud/project/files/Facility-DSD-Lookup.csv"
+FileTA <- "/cloud/project/files/Community-TA-Lookup.csv"
+DSD.lookup<-read.csv(FileDSD, header=TRUE,sep=",",check.names = FALSE,stringsAsFactors=FALSE)
+TA.lookup  <-read.csv(FileTA, header=TRUE,sep=",",check.names = FALSE,stringsAsFactors=FALSE)
+IM.lookup<-read.csv("https://www.datim.org/api/sqlViews/fgUtV6e9YIX/data.csv", header=TRUE,sep=",",check.names = FALSE,stringsAsFactors=FALSE)
 IM.lookup <- dplyr::select(IM.lookup,"code","uid")
+
+## multi find and replace, start
+mgsub <-function(pattern, replacement, x, ...) {
+  if (length(pattern)!=length(replacement)) {
+    stop("pattern and replacement do not have the same length.")
+  }
+  result <- x
+  for (i in 1:length(pattern)) {
+    result <- gsub(pattern[i], replacement[i], result, ...)
+  }
+  result
+}
+
+## multi find and replace, end
+
 colnames(IM.lookup)<-mgsub(c("code","uid"),c("IM_code","attributeOptionCombo"),colnames(IM.lookup))
-
-IM.lookup<-read.csv(File, header=TRUE,sep=",",check.names = FALSE,stringsAsFactors=FALSE)
-#testDataset<-read.csv(File, header=TRUE,sep=",",check.names = FALSE,stringsAsFactors=FALSE)
-#testDataset <- (merge(IM.lookup, testDataset, by.x = 'IM_code', by.y = 'Mechanism Code', all.y=TRUE))
-
 
 #install.packages(c("data.table","reshape2","tidyr","plyr","dplyr"))
 shaping <-function(file, supporttype, outputfile, ...) {
@@ -21,7 +39,7 @@ shaping <-function(file, supporttype, outputfile, ...) {
   setwd("/cloud/project/files/tests")
   #setwd("/cloud/project/files/coding")
   #data<-read.csv(file, header=TRUE,sep=",",check.names = FALSE,stringsAsFactors=FALSE)
-  data<-data.table::fread(file, header=TRUE,sep=",",check.names = FALSE,stringsAsFactors=FALSE,quote="\"")
+  data<-data.table::fread(file, header=TRUE,sep=",",check.names = FALSE,stringsAsFactors=FALSE,quote="\"", showProgress = TRUE)
   duplicate_columns <-names(data)[duplicated(names(data))]
   col_indexes <-which(colnames(data)==duplicate_columns)
   if(length(col_indexes>=1))
@@ -87,9 +105,8 @@ shaping <-function(file, supporttype, outputfile, ...) {
     #   "dataElement","period","orgUnit","categoryOptionCombo","attributeOptionCombo","value")
     #sum(as.numeric(as.character(ImportReady.aggregate$value)))
     #write.csv(ImportReady.aggregate,file=paste0('/cloud/project/files',outputfile,".csv"),row.names = FALSE)
-    write.csv(ImportReady.aggregate,paste0(outputfile,".csv"),row.names = FALSE)
-    
-    
+    write.csv(ImportReady.aggregate,paste0(outputfile,format(Sys.time(), format = "%F_%R_%Z", tz = "Africa/Kampala"),".csv"),row.names = FALSE)
+
   }
   else if (supporttype=='2'){   # DSD only
     #data.m.split <-tidyr::separate(data = data.m, col = variable, into = c("dataElement", "categoryOptionCombo"), sep = "\\;")
@@ -131,7 +148,7 @@ shaping <-function(file, supporttype, outputfile, ...) {
     ImportReady.aggregate <- dplyr::select(ImportReady.aggregate,
                                            "dataElement","period","orgUnit","categoryOptionCombo","attributeOptionCombo","value")
     #write.csv(ImportReady.aggregate,file=paste0('/cloud/project/files',outputfile,".csv"),row.names = FALSE)
-    write.csv(ImportReady.aggregate,paste0(outputfile,".csv"),row.names = FALSE)
+    write.csv(ImportReady.aggregate,paste0(outputfile,format(Sys.time(), format = "%F_%R_%Z", tz = "Africa/Kampala"),".csv"),row.names = FALSE)
     
   }
   else if(supporttype=='3'){  # other support type
