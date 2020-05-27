@@ -32,7 +32,6 @@ mgsub <-function(pattern, replacement, x, ...) {
 
 ## multi find and replace, end
 
-colnames(IM.lookup)<-mgsub(c("code","uid"),c("IM_code","attributeOptionCombo"),colnames(IM.lookup))
 
 #install.packages(c("data.table","reshape2","tidyr","plyr","dplyr"))
 shaping <-function(file, supporttype, outputfile, ...) {
