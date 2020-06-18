@@ -2,7 +2,7 @@
 
 #  Install Packages
 
-.packages <- c("here", "dplyr", "data.table")
+.packages <- c("here", "dplyr", "data.table","tidyr", "fuzzyjoin","stringdist")
 
 # Install CRAN packages (if not already installed)
 .inst <- .packages %in% installed.packages()
@@ -113,9 +113,70 @@ HIBRID_DATIM4U_orgunit_merge2_2_Subset <- HIBRID_DATIM4U_orgunit_merge2_2 %>%
 #install.packages("here")
 write.csv(HIBRID_DATIM4U_orgunit_merge2_2_Subset, file=here::here("files","HIBRID_DATIM4U_orgunit_merge2_2_Subset_for_matching.csv"), row.names = FALSE)
 
-# manual matching simplified, coming soon
+
+# manual matching simplified, below
+# example used is sites in kampala district that need matching
+
+mapping_hibrid_to_datim4u_orgunits <- HIBRID_DATIM4U_orgunit_merge_2_Subset %>% 
+  dplyr::select(name.x,uid,District,Subcounty)
 
 
+joined <-mapping_hibrid_to_datim4u_orgunits %>% 
+  fuzzyjoin::stringdist_left_join(DATIM4UorgunitDataSubset, 
+                                  by=c(name.x="name"),
+                                  distance_col="dist", method="jaccard", 
+                                  max_dist=0.6, ignore_case = TRUE) %>% 
+  dplyr::select(name.x,uid,District, Subcounty,level,organisationunituid,name,level5name,level6name,dist) 
+
+
+joined_3<-joined %>% 
+  dplyr::filter(grepl("Kampala District",District) & grepl("Central Division",Subcounty) &
+                  grepl("Kampala District",level5name) & grepl("Kampala Central Division",level6name) ) %>% 
+  subset(name.x %in% unlist(mapping_hibrid_to_datim4u_orgunits$name.x) ) %>% 
+  dplyr::mutate(distancecalc=stringdist::stringdist(joined_3$name.x, joined_3$name))
+
+# vector holding facilities in kampala district to be matched
+kampala <- c("Aandb Shalom HC II","Central Medical And Dental Clinic HC IInr","Dental Studio Clinic HC II","Dr. Ahmed Med. And Dental HC IInr","Dr. Jb Ntege Sengendo HC IInr","Ear, Nose And Throat Centre HC II","Eye Care Centre HC IInr","Hossana Medical Centre HC II","Hoswe And Macgeorge HC IInr","International Medical Centre-Kpc,Watoto","J And H Medical Clinic HC II Nr","Joda Clinic And Nursing Home HC IInr","Kampala Poly Clinic HC IInr","Kololo Polyclinic And X-Ray Service HC IInr","Luwum St. Dental And Surgery HC IInr")
+
+
+joined_3_alternate <- joined_3 %>% 
+    dplyr::filter(distancecalc %in% c(15,12,3,6,13,16) & name.x %in% kampala ) # change values appropriately
+
+
+# matching
+Match_Idx <-stringdist::amatch(tolower(joined_3_alternate$name.x),
+                               tolower(joined_3_alternate$name),
+                               method = 'lcs', maxDist = Inf)
+
+Matches <-data.frame(joined_3_alternate$name.x, joined_3_alternate$name[Match_Idx]) # matching happens here  
+
+Matches <-Matches %>% 
+  dplyr::mutate(Distance = stringdist::stringdist(Matches$joined_3_alternate.name.x, Matches$joined_3_alternate.name.Match_Idx., method = 'lcs'))  %>%
+  dplyr::filter(Distance %in% c(17,13,6,15)) %>%  # change value appropriately
+  unique() %>% 
+  dplyr::filter(!grepl("Hossana Medical Centre HC II", joined_3_alternate.name.x)) %>%  # change appropriately
+  tidyr::unite(Concatenate, "joined_3_alternate.name.x","joined_3_alternate.name.Match_Idx.", sep=";")
+
+# merging two together
+joined_3_alternate <-joined_3_alternate %>% 
+  tidyr::unite(Concatenate, "name.x","name", remove=FALSE, sep=";") 
+
+joined_3_alternate_x <- joined_3_alternate %>%
+  merge(Matches, by.x="Concatenate", by.y ="Concatenate" )
+
+# stubborn ones, failed to be captured by the above                          
+joined_3_alternate_4 <- joined_3_alternate %>%
+  dplyr::filter((grepl("J And H Medical Clinic HC II Nr", name.x) & grepl("J & H Medical Clinic Health Centre II", name)) | (grepl("Kampala Poly Clinic HC IInr", name.x) & grepl("Kampala Poly Clinic Health Centre II", name))) %>% 
+  tidyr::unite(Concatenate, "name.x","name", remove=FALSE, sep=";") %>% 
+  dplyr::mutate(Distance = stringdist::stringdist(name.x, name, method = 'lcs'))
+
+# merge alternative together
+joined_3_alternate_all <-data.table::rbindlist(list(joined_3_alternate_x,
+                                                    joined_3_alternate_4), fill=TRUE)
+
+# select columns
+joined_3_alternate_all <- joined_3_alternate_all %>% 
+  dplyr::select(uid,organisationunituid)
 
 
 ## orgunit matching, HIBRID vs DATIM, end
