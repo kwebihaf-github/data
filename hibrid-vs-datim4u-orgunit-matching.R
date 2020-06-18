@@ -113,7 +113,8 @@ HIBRID_DATIM4U_orgunit_merge2_2_Subset <- HIBRID_DATIM4U_orgunit_merge2_2 %>%
 #install.packages("here")
 write.csv(HIBRID_DATIM4U_orgunit_merge2_2_Subset, file=here::here("files","HIBRID_DATIM4U_orgunit_merge2_2_Subset_for_matching.csv"), row.names = FALSE)
 
-# manual matching not yet finished
+# manual matching simplified, coming soon
+
 
 
 
