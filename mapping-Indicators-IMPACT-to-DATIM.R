@@ -5,7 +5,7 @@
 
 #Install Packages
 
-.packages <- c("here", "dplyr","tidyr", "fuzzyjoin","stringdist")
+.packages <- c("here", "dplyr","tidyr", "fuzzyjoin","stringdist","data.table")
 
 # Install CRAN packages (if not already installed)
 .inst <- .packages %in% installed.packages()
@@ -198,12 +198,8 @@ hts_index_newly_tested_negative_facility <-rbind(joined_female_,joined_male_)
 # merging together the indicator categories
 
 # hts_index_facility
- hts_index_facility <-do.call("rbind",list(hts_index_offered_facility,
-                                           hts_index_accepted_facility,
-                                           hts_index_elicited_facility,
-                                           hts_index_known_positive_facility,
-                                           hts_index_newly_tested_positive_facility,
-                                           hts_index_newly_tested_negative_facility))
+ df_list <- mget(ls(pattern="hts_index|_facility"))
+ hts_index_facility <-data.table::rbindlist(df_list)
  
  hts_index_facility <- hts_index_facility %>%  tidyr::unite(Concatenate ,"deuid","cocuid", sep=";", remove=FALSE) # will be used in the indicator coding script or part or tool
  
