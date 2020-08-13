@@ -575,4 +575,9 @@ data_temp_remove_16 <-joined_subsets_all_together_subset_3 %>%
   ) %>% # these ones are to be removed or eliminated by reducing balance strategy
   dplyr::select(ServiceOutlet_name.ehmis,ServiceOutlet_name.datim) 
 
+
+# export so far matched to csv
+data.table::fwrite(eHMIS_DATIM4U_orgunit_matching_all_temp_2,
+                   file=here::here("Downloads","DATIM4U","DATIM","eHMIS_DATIM4U_orgunit_matching_all_temp_file-01.csv"),
+                   row.names = FALSE)
 # to continue
