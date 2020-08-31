@@ -576,8 +576,292 @@ data_temp_remove_16 <-joined_subsets_all_together_subset_3 %>%
   dplyr::select(ServiceOutlet_name.ehmis,ServiceOutlet_name.datim) 
 
 
+## check for duplicates
+data_temp_17 <- joined_subsets_all_together_subset_3 %>% 
+  dplyr::filter(District_name_ehmis_service_outlet_pair_count==2) %>% 
+  dplyr::group_by(ServiceOutlet.x) %>%  # group by the column that you want to check for duplicates in
+  dplyr::filter(n()>1)  # This means that one site for eHMIS having more than one UID in DATIM4U. This can be ignored
+
+# merge, temporary
+data_temp_17_temp_merge <- merge(data_temp_17, eHMISorgunitDataSubset[,c("ServiceOutlet","Subcounty_name")],
+                                 by.x="ServiceOutlet.x",
+                                 by.y="ServiceOutlet",
+                                 all.x = TRUE)
+
+data_temp_17_temp_merge <- merge(data_temp_17_temp_merge, DATIM4UorgunitDataSubset[,c("ServiceOutlet","Subcounty_name")],
+                                 by.x="ServiceOutlet.y",
+                                 by.y="ServiceOutlet",
+                                 all.x = TRUE)
+
+# soundex matching
+data_temp_17_temp_merge  <- data_temp_17_temp_merge %>% 
+  dplyr::mutate(Distance_Subcounties_soundex = stringdist::stringdist(Subcounty_name.x,Subcounty_name.y, method = 'soundex')) # using soundex
+
+
+#
+data_temp_remove_17_1 <-data_temp_17_temp_merge %>%
+  dplyr::filter(District_name_ehmis_service_outlet_pair_count==2 & Distance_Subcounties_soundex==0 & !(
+    ServiceOutlet.y=="LwhQKD9V6Mb" & ServiceOutlet.x=="a6qaoH2Xzb1" & ServiceOutlet_name.datim=="Buyende Health Centre III" & ServiceOutlet_name.ehmis=="Buyende HC III" |
+      ServiceOutlet.y=="Dvqcqo6WK9y" & ServiceOutlet.x=="ACckadqFYV7" & ServiceOutlet_name.datim=="Kamwenge Health Centre III" & ServiceOutlet_name.ehmis=="Kamwenge HC III" |
+      ServiceOutlet.y=="yW4ZTg6cnZ0" & ServiceOutlet.x=="Ad2soe0ZZLP" & ServiceOutlet_name.datim=="Kamwenge Medical Centre HCII" & ServiceOutlet_name.ehmis=="Kamwenge Medical Centre HC II" |
+      ServiceOutlet.y=="cS9eh05OU2U" & ServiceOutlet.x=="aFgrVHVDqoZ" & ServiceOutlet_name.datim=="Amuru Health Centre III" & ServiceOutlet_name.ehmis=="Amuru Lacor HC III" |
+      ServiceOutlet.y=="AhXF0XiO1vK" & ServiceOutlet.x=="aqerr5gK2pr" & ServiceOutlet_name.datim=="Friends Med/C Health Centre II" & ServiceOutlet_name.ehmis=="Friends Medical Center HC II" |
+      ServiceOutlet.y=="AqjmkI2QaRG" & ServiceOutlet.x=="aqerr5gK2pr" & ServiceOutlet_name.datim=="Friends Medical Centre Health Centre II" & ServiceOutlet_name.ehmis=="Friends Medical Center HC II" |
+      ServiceOutlet.y=="Dcp9cCL054j" & ServiceOutlet.x=="B3XcYiNcqa7" & ServiceOutlet_name.datim=="Multicare Medical Centre HCII" & ServiceOutlet_name.ehmis=="Multicare Medical Centre HC II" |
+      ServiceOutlet.y=="IOtLR19xEzF" & ServiceOutlet.x=="DbISdEaBLk6" & ServiceOutlet_name.datim=="New life medical centre HCII" & ServiceOutlet_name.ehmis=="New Life Medical Centre HC II" |
+      ServiceOutlet.y=="aToEawLC4E5" & ServiceOutlet.x=="dfbQ83xJOeg" & ServiceOutlet_name.datim=="Care Medical Centre HCIII" & ServiceOutlet_name.ehmis=="Care Medical Centre (Wakiso) HC III" |
+      ServiceOutlet.y=="tWane5JFRsS" & ServiceOutlet.x=="e1pByDp3Nxo" & ServiceOutlet_name.datim=="Nakasongola Prison HC III" & ServiceOutlet_name.ehmis=="Nakasongola Prisons HC III" |
+      ServiceOutlet.y=="aBeMfKzBRRQ" & ServiceOutlet.x=="eAuFbAc1MUZ" & ServiceOutlet_name.datim=="Panyadoli Hill Health Centre II" & ServiceOutlet_name.ehmis=="Panyadoli Hill HC II" |
+      ServiceOutlet.y=="vKTaUF0DEQO" & ServiceOutlet.x=="euEg1r9HcSg" & ServiceOutlet_name.datim=="Cure Medical Consults HCIII" & ServiceOutlet_name.ehmis=="Cure Medical Consults HC III" |
+      ServiceOutlet.y=="y2ScQrJjct7" & ServiceOutlet.x=="fUPJVU6p7Ur" & ServiceOutlet_name.datim=="Mafuga Health Centre II" & ServiceOutlet_name.ehmis=="Mafuga HC II" |
+      ServiceOutlet.y=="LieNk9dwlYl" & ServiceOutlet.x=="KGqGBYXgnr0" & ServiceOutlet_name.datim=="Kamwenge Medical Clinic HCII" & ServiceOutlet_name.ehmis=="Kamwenge Medical Clinic HC II" |
+      ServiceOutlet.y=="AhXF0XiO1vK" & ServiceOutlet.x=="lwlvBRRVEVN" & ServiceOutlet_name.datim=="Friends Med/C Health Centre II" & ServiceOutlet_name.ehmis=="Friends Medical Centre HC II" |
+      ServiceOutlet.y=="AqjmkI2QaRG" & ServiceOutlet.x=="lwlvBRRVEVN" & ServiceOutlet_name.datim=="Friends Medical Centre Health Centre II" & ServiceOutlet_name.ehmis=="Friends Medical Centre HC II" |
+      ServiceOutlet.y=="tmCLcm6Wxj7" & ServiceOutlet.x=="MdmwmQbuLjA" & ServiceOutlet_name.datim=="Sheema Community HCIII" & ServiceOutlet_name.ehmis=="Sheema Community HC III" |
+      ServiceOutlet.y=="eX1g5Un6fEt" & ServiceOutlet.x=="o7OluoErEud" & ServiceOutlet_name.datim=="Hoima Police Clinic HC II PHP" & ServiceOutlet_name.ehmis=="Hoima Police HC II" |
+      ServiceOutlet.y=="pQi8qBlT57x" & ServiceOutlet.x=="OERp3gZVfSx" & ServiceOutlet_name.datim=="Cure Medical Centre HCIII" & ServiceOutlet_name.ehmis=="Cure Medical Centre HC III" |
+      ServiceOutlet.y=="HYRKuLDyZe5" & ServiceOutlet.x=="Ol1Eb7jfNAG" & ServiceOutlet_name.datim=="Hope Children's Clinic HCII" & ServiceOutlet_name.ehmis=="Hope Children's Clinic HC II" |
+      ServiceOutlet.y=="ofpBZVTpK1L" & ServiceOutlet.x=="oYg6OsZ6wxS" & ServiceOutlet_name.datim=="Kitebi Medical Centre HCII" & ServiceOutlet_name.ehmis=="Kitebi Medical Centre HC II" |
+      ServiceOutlet.y=="hECo9L4HGf1" & ServiceOutlet.x=="sLOvwpCrdh2" & ServiceOutlet_name.datim=="Kitebi Health Centre III" & ServiceOutlet_name.ehmis=="Kitebi Health Centre HC III" |
+      ServiceOutlet.y=="ks8sFPsqaOy" & ServiceOutlet.x=="TEmxmKVJJPa" & ServiceOutlet_name.datim=="Gasovu Health Centre III" & ServiceOutlet_name.ehmis=="Gasovu HC III" |
+      ServiceOutlet.y=="Tj5pk05veg8" & ServiceOutlet.x=="uuLehTDwCMC" & ServiceOutlet_name.datim=="Liberty Medical Clinic HCII" & ServiceOutlet_name.ehmis=="Liberty Clinic HC II" |
+      ServiceOutlet.y=="CdbowvC8qwJ" & ServiceOutlet.x=="xK1NgGOVu2D" & ServiceOutlet_name.datim=="Gasovu Health Centre II" & ServiceOutlet_name.ehmis=="Gasovu HC II" |
+      ServiceOutlet.y=="sOQ3dUHIE7Y" & ServiceOutlet.x=="yAtQPOJepli" & ServiceOutlet_name.datim=="Care Medical Centre HCII" & ServiceOutlet_name.ehmis=="Care Medical Centre HC II" |
+      ServiceOutlet.y=="acg9uyuC5ue" & ServiceOutlet.x=="YlgW3mVo9uu" & ServiceOutlet_name.datim=="Netcare medical centre HCII" & ServiceOutlet_name.ehmis=="Netcare medical centre HC II" 
+  )
+  ) %>% # these ones are to be removed or eliminated by reducing balance strategy
+  dplyr::select(ServiceOutlet_name.ehmis,ServiceOutlet_name.datim)
+
+#
+data_temp_remove_17_2 <- data_temp_17_temp_merge %>%
+  dplyr::filter(District_name_ehmis_service_outlet_pair_count==2 & Distance_Subcounties_soundex==1) %>% 
+  dplyr::select(ServiceOutlet_name.ehmis,ServiceOutlet_name.datim)
+
+## not duplicates
+data_temp_17_not_duplicates <- joined_subsets_all_together_subset_3 %>% 
+  dplyr::filter(District_name_ehmis_service_outlet_pair_count==2) %>% 
+  dplyr::group_by(ServiceOutlet.x) %>%  # group by the column that you want to check for duplicates in
+  dplyr::filter(n()==1)  # This means that one site for eHMIS having more than one UID in DATIM4U. This can be ignored
+
+# merge, temporary
+data_temp_17_not_duplicates_temp_merge <- merge(data_temp_17_not_duplicates, eHMISorgunitDataSubset[,c("ServiceOutlet","Subcounty_name")],
+                                                by.x="ServiceOutlet.x",
+                                                by.y="ServiceOutlet",
+                                                all.x = TRUE)
+
+data_temp_17_not_duplicates_temp_merge <- merge(data_temp_17_not_duplicates_temp_merge, DATIM4UorgunitDataSubset[,c("ServiceOutlet","Subcounty_name")],
+                                                by.x="ServiceOutlet.y",
+                                                by.y="ServiceOutlet",
+                                                all.x = TRUE)
+
+# soundex matching
+data_temp_17_not_duplicates_temp_merge  <- data_temp_17_not_duplicates_temp_merge %>% 
+  dplyr::mutate(Distance_Subcounties_soundex = stringdist::stringdist(Subcounty_name.x,Subcounty_name.y, method = 'soundex')) # using soundex
+
+#
+data_temp_remove_not_duplicates_17_1 <-data_temp_17_not_duplicates_temp_merge %>%
+  dplyr::filter(District_name_ehmis_service_outlet_pair_count==2 & Distance_Subcounties_soundex==0 & !(
+    ServiceOutlet.y=="DGEzUqtomCK" & ServiceOutlet.x=="Eio9d3BPJ2B" & ServiceOutlet_name.datim=="St. Luke Society Health Centre II" & ServiceOutlet_name.ehmis=="St. Luke Society HC II" |
+      ServiceOutlet.y=="fHgs6cV2Q6H" & ServiceOutlet.x=="pATBoZZRddT" & ServiceOutlet_name.datim=="Kaabong HOSPITAL" & ServiceOutlet_name.ehmis=="Kaabong Hospital" |
+      ServiceOutlet.y=="FOkGddZTFLx" & ServiceOutlet.x=="PPycqcd3beA" & ServiceOutlet_name.datim=="Kwagala Medical Clinic HCII" & ServiceOutlet_name.ehmis=="Kwagala Medical Clinic (Mende) HC II" |
+      ServiceOutlet.y=="FTENiIutCsZ" & ServiceOutlet.x=="ttcMJ7FNnU0" & ServiceOutlet_name.datim=="St. Marys Medical Services CLINIC" & ServiceOutlet_name.ehmis=="St. Marys Medical Services Clinic" |
+      ServiceOutlet.y=="I8Z4BLjT6ua" & ServiceOutlet.x=="fnl80NudU5x" & ServiceOutlet_name.datim=="Divine Medical Centre HCII" & ServiceOutlet_name.ehmis=="Divine Medical Centre HC II" |
+      ServiceOutlet.y=="lnnMkUKP1aJ" & ServiceOutlet.x=="aLPsQWPEMFT" & ServiceOutlet_name.datim=="Kakumiro Health Centre IV" & ServiceOutlet_name.ehmis=="Kakumiro HC IV" |
+      ServiceOutlet.y=="OVj3HouyGRs" & ServiceOutlet.x=="KM8jCDa1qLw" & ServiceOutlet_name.datim=="Lions Medical Centre Health Centre II" & ServiceOutlet_name.ehmis=="Lions Medical Centre (Kabowa) HC II" |
+      ServiceOutlet.y=="OVj3HouyGRs" & ServiceOutlet.x=="R0o09ipn1rj" & ServiceOutlet_name.datim=="Lions Medical Centre Health Centre II" & ServiceOutlet_name.ehmis=="Lions Medical Centre (Mutundwe) HC II" |
+      ServiceOutlet.y=="PqZJBY7X6Hn" & ServiceOutlet.x=="QHFF4O9ynsn" & ServiceOutlet_name.datim=="Nakulabye Medical Centre HCII" & ServiceOutlet_name.ehmis=="Nakulabye Medical Centre (Makindye) HC II" |
+      ServiceOutlet.y=="ps5XFBH4bLK" & ServiceOutlet.x=="FcZTYW9JOGL" & ServiceOutlet_name.datim=="Stake Health Care HCII" & ServiceOutlet_name.ehmis=="Stake Health Care HC II" |
+      ServiceOutlet.y=="pWc7SYEKBSR" & ServiceOutlet.x=="fyWg56mdyYT" & ServiceOutlet_name.datim=="UMC Victoria Hospital" & ServiceOutlet_name.ehmis=="UMC Victoria (Naguru) Hospital" |
+      ServiceOutlet.y=="rKBEm0QbvGz" & ServiceOutlet.x=="tGo7YRaHpCN" & ServiceOutlet_name.datim=="Malcom Health Care Kabowa HCII" & ServiceOutlet_name.ehmis=="Malcom Health Care (Kabowa) HC II" |
+      ServiceOutlet.y=="s4g0v36Gf1j" & ServiceOutlet.x=="Lw5bQ2U3VQQ" & ServiceOutlet_name.datim=="St. Micheal Medical Centre Health Centre II" & ServiceOutlet_name.ehmis=="St. Micheal Medical Centre (Nakawa) HC II" |
+      ServiceOutlet.y=="Sbn9udpf7V9" & ServiceOutlet.x=="BiHrgxghFvx" & ServiceOutlet_name.datim=="Zion Medical centre HCII" & ServiceOutlet_name.ehmis=="Zion Medical Centre HC II" |
+      ServiceOutlet.y=="TFBmXjxJOyE" & ServiceOutlet.x=="wtyMvPnfdEI" & ServiceOutlet_name.datim=="Kamwenge Prison Hc II" & ServiceOutlet_name.ehmis=="Kamwenge Prison Hc II" |
+      ServiceOutlet.y=="uVHxrRzjtKJ" & ServiceOutlet.x=="sUuGsTZpCxT" & ServiceOutlet_name.datim=="Katooke Health Clinic" & ServiceOutlet_name.ehmis=="Katooke Health Clinic HC II" |
+      ServiceOutlet.y=="xfZ6CkzKk67" & ServiceOutlet.x=="LulU6pCpYAA" & ServiceOutlet_name.datim=="Sanyu Clinic Health Centre II" & ServiceOutlet_name.ehmis=="Sanyu Clinic Rubaga HC II" 
+  )
+  ) %>% # these ones are to be removed or eliminated by reducing balance strategy
+  dplyr::select(ServiceOutlet_name.ehmis,ServiceOutlet_name.datim)
+
+#
+data_temp_remove_not_duplicates_17_2 <- data_temp_17_not_duplicates_temp_merge %>%
+  dplyr::filter(District_name_ehmis_service_outlet_pair_count==2 & Distance_Subcounties_soundex==1) %>% 
+  dplyr::select(ServiceOutlet_name.ehmis,ServiceOutlet_name.datim)
+
+## check for duplicates
+data_temp_18 <- joined_subsets_all_together_subset_3 %>% 
+  dplyr::filter(District_name_ehmis_service_outlet_pair_count==1) %>% 
+  dplyr::group_by(ServiceOutlet.x) %>%  # group by the column that you want to check for duplicates in
+  dplyr::filter(n()>1)  # This means that one site for eHMIS having more than one UID in DATIM4U. This can be ignored
+
+# merge, temporary
+data_temp_18_temp_merge <- merge(data_temp_18, eHMISorgunitDataSubset[,c("ServiceOutlet","Subcounty_name")],
+                                 by.x="ServiceOutlet.x",
+                                 by.y="ServiceOutlet",
+                                 all.x = TRUE)
+
+data_temp_18_temp_merge <- merge(data_temp_18_temp_merge, DATIM4UorgunitDataSubset[,c("ServiceOutlet","Subcounty_name")],
+                                 by.x="ServiceOutlet.y",
+                                 by.y="ServiceOutlet",
+                                 all.x = TRUE)
+
+# soundex matching
+data_temp_18_temp_merge  <- data_temp_18_temp_merge %>% 
+  dplyr::mutate(Distance_Subcounties_soundex = stringdist::stringdist(Subcounty_name.x,Subcounty_name.y, method = 'soundex')) # using soundex
+
+# all words
+data_temp_18_temp_merge$ServiceOutlet_name.ehmis_all_word <- stringi::stri_extract_all_words(data_temp_18_temp_merge$ServiceOutlet_name.ehmis) # can be used to extract the nth word.
+data_temp_18_temp_merge$ServiceOutlet_name.datim_all_word <- stringi::stri_extract_all_words(data_temp_18_temp_merge$ServiceOutlet_name.datim) # can be used to extract the nth word.
+
+
+# second word
+data_temp_18_temp_merge$ServiceOutlet_name.ehmis_second_word <- as.character (lapply(data_temp_18_temp_merge$ServiceOutlet_name.ehmis_all_word,"[",2) )
+data_temp_18_temp_merge$ServiceOutlet_name.datim_second_word <- as.character (lapply(data_temp_18_temp_merge$ServiceOutlet_name.datim_all_word,"[",2) )
+
+data_temp_18_temp_merge  <- data_temp_18_temp_merge %>% 
+  dplyr::mutate(Distance_Second_word_soundex = stringdist::stringdist(ServiceOutlet_name.datim_second_word,ServiceOutlet_name.ehmis_second_word, method = 'soundex')) # using soundex
+
+# subsetting for removal
+data_temp_remain_18_1_temp <- data_temp_18_temp_merge %>% 
+  dplyr::filter(District_name_ehmis_service_outlet_pair_count==1 & Distance_Subcounties_soundex==0 & Distance_Second_word_soundex==0) %>% 
+  dplyr::select(ServiceOutlet.y,ServiceOutlet.x,ServiceOutlet_name.datim,ServiceOutlet_name.ehmis) 
+
+data_temp_remain_18_1 <- data_temp_18_temp_merge %>% 
+  dplyr::anti_join(data_temp_remain_18_1_temp)
+#dplyr::select(ServiceOutlet_name.ehmis,ServiceOutlet_name.datim)
+
+data_temp_remain_18_1 %>%
+  dplyr::filter(District_name_ehmis_service_outlet_pair_count==1 & Distance_Subcounties_soundex==0 & Distance_Second_word_soundex==1) %>% 
+  dplyr::select(ServiceOutlet_name.ehmis_second_word) %>% 
+  dplyr::count(ServiceOutlet_name.ehmis_second_word) %>%  # group by the column that you want to check for duplicates in
+  dplyr::arrange(-n) # arranged in descending order
+
+
+# joined_subsets_all_together_subset_3 %>% 
+#   dplyr::count(District_name_ehmis_service_outlet_pair_count) %>% 
+#   dplyr::arrange(-n) # arranged in descending order
+
+#last word
+data_temp_remain_18_1$ServiceOutlet_name.ehmis_last_word <- stringi::stri_extract_last_words(data_temp_remain_18_1$ServiceOutlet_name.ehmis) 
+data_temp_remain_18_1$ServiceOutlet_name.datim_last_word <- stringi::stri_extract_last_words(data_temp_remain_18_1$ServiceOutlet_name.datim)
+
+data_temp_remain_18_1  <- data_temp_remain_18_1 %>% 
+  dplyr::mutate(Distance_Last_word_default = stringdist::stringdist(ServiceOutlet_name.datim_last_word,ServiceOutlet_name.ehmis_last_word)) # using default
+
+# subsetting for removal
+data_temp_remain_18_1_temp_1 <- data_temp_remain_18_1 %>% 
+  dplyr::filter(District_name_ehmis_service_outlet_pair_count==1 & Distance_Subcounties_soundex==0 & Distance_Second_word_soundex==1 & Distance_Last_word_default==0) %>% 
+  dplyr::select(ServiceOutlet.y,ServiceOutlet.x,ServiceOutlet_name.datim,ServiceOutlet_name.ehmis) 
+
+#
+data_temp_remain_18_1_temp_1 <-data_temp_remain_18_1_temp_1 %>%
+  dplyr::filter(!(
+    ServiceOutlet.y=="baynBDuUXUg" &ServiceOutlet.x=="wweoNKCmZIo" &ServiceOutlet_name.datim=="St. James- Kasubi Health Centre II" &ServiceOutlet_name.ehmis=="St. Agnes Kasubi Health Clinic HC II" |
+      ServiceOutlet.y=="cZUdN87UOWm" &ServiceOutlet.x=="aQ7USWbUHsH" &ServiceOutlet_name.datim=="Kyenjojo Prison HC II" &ServiceOutlet_name.ehmis=="Kyenjojo Police HC II" |
+      ServiceOutlet.y=="IxxR2M3VAXj" &ServiceOutlet.x=="tFR0RVesj3i" &ServiceOutlet_name.datim=="Mayanga Health Centre II" &ServiceOutlet_name.ehmis=="Mayanga Medical Centre HC II" |
+      ServiceOutlet.y=="liJMJApQpu6" &ServiceOutlet.x=="wweoNKCmZIo" &ServiceOutlet_name.datim=="St. Jude- Kasubi Health Centre II" &ServiceOutlet_name.ehmis=="St. Agnes Kasubi Health Clinic HC II" |
+      ServiceOutlet.y=="lvjYFnJSI7l" &ServiceOutlet.x=="wVUi8BXxKkY" &ServiceOutlet_name.datim=="Kitwe Prison HC II" &ServiceOutlet_name.ehmis=="Kitwe HC II" |
+      ServiceOutlet.y=="Sg4tgQqRe0Z" &ServiceOutlet.x=="BE5LiYZjBvM" &ServiceOutlet_name.datim=="Kabasanda Prison HC II" &ServiceOutlet_name.ehmis=="Kabasanda HC II" |
+      ServiceOutlet.y=="UYZqWZHYfQD" &ServiceOutlet.x=="SNsnShtQa5C" &ServiceOutlet_name.datim=="Mutufu Health Centre II" &ServiceOutlet_name.ehmis=="Mutufu Prison HC II" |
+      ServiceOutlet.y=="wnEgLOscLcG" &ServiceOutlet.x=="wVUi8BXxKkY" &ServiceOutlet_name.datim=="Kitwe Prison HC II" &ServiceOutlet_name.ehmis=="Kitwe HC II" |
+      ServiceOutlet.y=="xEKnxTyooJ0" &ServiceOutlet.x=="cLnJlZo5COI" &ServiceOutlet_name.datim=="Sentema Prison HC II" &ServiceOutlet_name.ehmis=="Sentema HC II" |
+      ServiceOutlet.y=="ZccwtjwsW4q" &ServiceOutlet.x=="BE5LiYZjBvM" &ServiceOutlet_name.datim=="Kabasanda Prison HC II" &ServiceOutlet_name.ehmis=="Kabasanda HC II" 
+  )
+  )
+
+# for removal
+data_temp_remove_18_1 <- data_temp_remain_18_1 %>% 
+  dplyr::anti_join(data_temp_remain_18_1_temp_1) %>% 
+  dplyr::select(ServiceOutlet_name.ehmis,ServiceOutlet_name.datim)
+
+
+## not duplicates
+data_temp_18_not_duplicates <- joined_subsets_all_together_subset_3 %>% 
+  dplyr::filter(District_name_ehmis_service_outlet_pair_count==1) %>% 
+  dplyr::group_by(ServiceOutlet.x) %>%  # group by the column that you want to check for duplicates in
+  dplyr::filter(n()==1)  # This means that one site for eHMIS having more than one UID in DATIM4U. This can be ignored
+
+# merge, temporary
+data_temp_18_not_duplicates_temp_merge <- merge(data_temp_18_not_duplicates, eHMISorgunitDataSubset[,c("ServiceOutlet","Subcounty_name")],
+                                                by.x="ServiceOutlet.x",
+                                                by.y="ServiceOutlet",
+                                                all.x = TRUE)
+
+data_temp_18_not_duplicates_temp_merge <- merge(data_temp_18_not_duplicates_temp_merge, DATIM4UorgunitDataSubset[,c("ServiceOutlet","Subcounty_name")],
+                                                by.x="ServiceOutlet.y",
+                                                by.y="ServiceOutlet",
+                                                all.x = TRUE)
+
+# soundex matching
+data_temp_18_not_duplicates_temp_merge  <- data_temp_18_not_duplicates_temp_merge %>% 
+  dplyr::mutate(Distance_Subcounties_soundex = stringdist::stringdist(Subcounty_name.x,Subcounty_name.y, method = 'soundex')) # using soundex
+
+# all words
+data_temp_18_not_duplicates_temp_merge$ServiceOutlet_name.ehmis_all_word <- stringi::stri_extract_all_words(data_temp_18_not_duplicates_temp_merge$ServiceOutlet_name.ehmis) # can be used to extract the nth word.
+data_temp_18_not_duplicates_temp_merge$ServiceOutlet_name.datim_all_word <- stringi::stri_extract_all_words(data_temp_18_not_duplicates_temp_merge$ServiceOutlet_name.datim) # can be used to extract the nth word.
+
+
+# second word
+data_temp_18_not_duplicates_temp_merge$ServiceOutlet_name.ehmis_second_word <- as.character (lapply(data_temp_18_not_duplicates_temp_merge$ServiceOutlet_name.ehmis_all_word,"[",2) )
+data_temp_18_not_duplicates_temp_merge$ServiceOutlet_name.datim_second_word <- as.character (lapply(data_temp_18_not_duplicates_temp_merge$ServiceOutlet_name.datim_all_word,"[",2) )
+
+data_temp_18_not_duplicates_temp_merge  <- data_temp_18_not_duplicates_temp_merge %>% 
+  dplyr::mutate(Distance_Second_word_soundex = stringdist::stringdist(ServiceOutlet_name.datim_second_word,ServiceOutlet_name.ehmis_second_word, method = 'soundex')) # using soundex
+
+# subsetting for removal
+data_temp_remain_not_duplicates_18_1_temp <- data_temp_18_not_duplicates_temp_merge %>% 
+  dplyr::filter(District_name_ehmis_service_outlet_pair_count==1 & Distance_Subcounties_soundex==0 & Distance_Second_word_soundex==0) %>% 
+  dplyr::select(ServiceOutlet.y,ServiceOutlet.x,ServiceOutlet_name.datim,ServiceOutlet_name.ehmis) 
+
+data_temp_remain_not_duplicates_18_1 <- data_temp_18_not_duplicates_temp_merge %>% 
+  dplyr::anti_join(data_temp_remain_not_duplicates_18_1_temp) # remaining using second word
+
+#last word
+data_temp_remain_not_duplicates_18_1$ServiceOutlet_name.ehmis_last_word <- stringi::stri_extract_last_words(data_temp_remain_not_duplicates_18_1$ServiceOutlet_name.ehmis) 
+data_temp_remain_not_duplicates_18_1$ServiceOutlet_name.datim_last_word <- stringi::stri_extract_last_words(data_temp_remain_not_duplicates_18_1$ServiceOutlet_name.datim)
+
+data_temp_remain_not_duplicates_18_1  <- data_temp_remain_not_duplicates_18_1 %>% 
+  dplyr::mutate(Distance_Last_word_default = stringdist::stringdist(ServiceOutlet_name.datim_last_word,ServiceOutlet_name.ehmis_last_word)) # using default
+
+# subsetting for removal
+data_temp_remain_not_duplicates_18_1_temp_1 <- data_temp_remain_not_duplicates_18_1 %>% 
+  dplyr::filter(District_name_ehmis_service_outlet_pair_count==1 & Distance_Subcounties_soundex==0 & Distance_Second_word_soundex==1 & Distance_Last_word_default==0) %>% 
+  dplyr::select(ServiceOutlet.y,ServiceOutlet.x,ServiceOutlet_name.datim,ServiceOutlet_name.ehmis) 
+
+#
+data_temp_remain_not_duplicates_18_1_temp_1 <-data_temp_remain_not_duplicates_18_1_temp_1 %>%
+  dplyr::filter(!(
+    ServiceOutlet.y=="c46AYg2H9kr" &ServiceOutlet.x=="h7wpkDly8qZ" &ServiceOutlet_name.datim=="Oyam Women Prison HC II" &ServiceOutlet_name.ehmis=="Oyam Main Prisons HC II" |
+      ServiceOutlet.y=="eKziS8rk9nI" &ServiceOutlet.x=="AULdz853paf" &ServiceOutlet_name.datim=="Isingiro Prison HC II" &ServiceOutlet_name.ehmis=="Isingiro Police HC II" |
+      ServiceOutlet.y=="HuyfoZ8Ahjm" &ServiceOutlet.x=="Kq6r9wr36GH" &ServiceOutlet_name.datim=="Luzira Remand Prison HC III" &ServiceOutlet_name.ehmis=="Luzira Upper Prison HC III" |
+      ServiceOutlet.y=="KvacVyOjIXE" &ServiceOutlet.x=="zcKswPk0OtD" &ServiceOutlet_name.datim=="Busaana Parents Clinic" &ServiceOutlet_name.ehmis=="Busaana Prison Clinic" |
+      ServiceOutlet.y=="MVvRRAI32os" &ServiceOutlet.x=="xClaXB4x20Y" &ServiceOutlet_name.datim=="Sure Life Medical Centre HC II" &ServiceOutlet_name.ehmis=="Sure Medi Care HC II" |
+      ServiceOutlet.y=="oDHiuX0kQzL" &ServiceOutlet.x=="idF5Y57Ula8" &ServiceOutlet_name.datim=="Kitala Health Centre II" &ServiceOutlet_name.ehmis=="Kitala Prison HC II" |
+      ServiceOutlet.y=="rhFhtExhfvf" &ServiceOutlet.x=="PajDI41MhPJ" &ServiceOutlet_name.datim=="St. Bernard'S Health Centre II" &ServiceOutlet_name.ehmis=="St. Vincent Health Centre HC II" |
+      ServiceOutlet.y=="TBjKfwdFkEb" &ServiceOutlet.x=="x1UaYpPwx6c" &ServiceOutlet_name.datim=="Gulu Independent Hospital" &ServiceOutlet_name.ehmis=="Gulu Military Hospital" |
+      ServiceOutlet.y=="VvDYjfe8kt7" &ServiceOutlet.x=="Owvv3PbIrZ2" &ServiceOutlet_name.datim=="Amita Health Centre II" &ServiceOutlet_name.ehmis=="Amita Prison HC II" 
+  )
+  ) 
+
+# for removal
+data_temp_remove_18_2 <- data_temp_remain_not_duplicates_18_1 %>% 
+  dplyr::anti_join(data_temp_remain_not_duplicates_18_1_temp_1) %>% 
+  dplyr::select(ServiceOutlet_name.ehmis,ServiceOutlet_name.datim)
+
+# combine the remove subsets together
+df_list <- mget(ls(pattern="data_temp_remove_"))
+remove_subsets_all_together_merged <-data.table::rbindlist(df_list) # filling in missing columns
+
+# temporary merge the matched orgunits
+eHMIS_DATIM4U_orgunit_matching_all_temp_3 <- joined_subsets_all_together_subset_3 %>% 
+  dplyr::anti_join(remove_subsets_all_together_merged) %>% 
+  dplyr::select(eHMIS_orgunit_uid=ServiceOutlet.x,DATIM4U_orgunit_uid=ServiceOutlet.y) # renaming of columns takes place at the same time columns are selected.
+
+eHMIS_DATIM4U_orgunit_matching_all_temp_3 <-rbind(eHMIS_DATIM4U_orgunit_matching_all_temp_3,eHMIS_DATIM4U_orgunit_matching_all_temp_2) %>% 
+  dplyr::distinct(.keep_all = TRUE)
+
 # export so far matched to csv
-data.table::fwrite(eHMIS_DATIM4U_orgunit_matching_all_temp_2,
-                   file=here::here("Downloads","DATIM4U","DATIM","eHMIS_DATIM4U_orgunit_matching_all_temp_file-01.csv"),
+data.table::fwrite(eHMIS_DATIM4U_orgunit_matching_all_temp_3,
+                   file="~/Downloads/DATIM4U/DATIM/eHMIS_DATIM4U_orgunit_matching_all_temp_file-02.csv",
                    row.names = FALSE)
+
 # to continue
