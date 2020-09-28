@@ -52,7 +52,7 @@ write.csv(HIBRID_DATIM4U_orgunit_merge_2_Subset, file=here::here("files","HIBRID
 # import after manual matching
 HIBRID_DATIM4U_orgunit_merge_2_Subset <-read.csv(here::here("files","HIBRID_DATIM4U_orgunit_merge_2_Subset.csv"), header = TRUE,sep = ",",stringsAsFactors = FALSE)
 
-
+#matching happens here
 HIBRID_DATIM4U_orgunit_matching_1 <- HIBRID_DATIM4U_orgunit_merge_1 %>% 
   dplyr::filter(!is.na(level)) %>% 
   dplyr::select(uid,organisationunituid)
