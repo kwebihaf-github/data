@@ -16,6 +16,8 @@ DSD.lookup<-read.csv(FileDSD, header=TRUE,sep=",",check.names = FALSE,stringsAsF
 TA.lookup  <-read.csv(FileTA, header=TRUE,sep=",",check.names = FALSE,stringsAsFactors=FALSE)
 IM.lookup<-read.csv("https://www.datim.org/api/sqlViews/fgUtV6e9YIX/data.csv", header=TRUE,sep=",",check.names = FALSE,stringsAsFactors=FALSE)
 IM.lookup <- dplyr::select(IM.lookup,"code","uid")
+IM.default <- data.frame(code="HllvX50cXC0",uid="HllvX50cXC0")
+IM.lookup <- rbind(IM.lookup,IM.default)
 colnames(IM.lookup)<-mgsub(c("code","uid"),c("IM_code","attributeOptionCombo"),colnames(IM.lookup))
 
 ## multi find and replace, start
