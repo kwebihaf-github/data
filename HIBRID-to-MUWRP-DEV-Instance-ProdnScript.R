@@ -283,7 +283,7 @@ datavalues_csv <-datavalues_csv %>%
                   dplyr::filter(value!="")  # remove rows that have NAs
 
 #post
-postDatasetDatavaluesToDev<-httr::POST(MUWRP.dest.url,"api/dataValueSets?dryRun=false&preheatCache=false&importStrategy=CREATE_AND_UPDATE",
+postDatasetDatavaluesToDev<-httr::POST(paste0(MUWRP.dest.url,"api/dataValueSets?dryRun=false&preheatCache=false&importStrategy=CREATE_AND_UPDATE"),
                                        #body=httr::upload_file(here::here("files","FY2019-metadata-dataset-quarterly-facility_categoryOptions.json")), 
                                        body=jsonlite::toJSON(list(dataValues=datavalues_csv)),
                                        httr::verbose(),
