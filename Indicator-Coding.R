@@ -310,6 +310,7 @@ shaping <-function(file, supporttype, outputfile, ...) {
   }
   #colnames(merge.split)
   #print (sum(as.numeric(as.character(data.m.split$value)),na.rm=T))
+  options(digits = 10) #incase there are decimal values, they will not be rounded
   print (sum(as.numeric(as.character(data.m$value)),na.rm=T))
   print (sum(as.numeric(as.character(ImportReady.aggregate$value))))
   setwd("/cloud/project/")
@@ -580,6 +581,7 @@ shaping_old <-function(file, supporttype, outputfile, ...) {
     write.csv(ImportReady.aggregate,paste0(outputfile,".csv"),row.names = FALSE)
   }
   #colnames(merge.split)
+  options(digits = 10) #incase there are decimal values, they will not be rounded
   print (sum(as.numeric(as.character(data.m.split$value)),na.rm=T))
   #print (sum(as.numeric(as.character(data.m$value)),na.rm=T))
   print (sum(as.numeric(as.character(ImportReady.aggregate$value))))
