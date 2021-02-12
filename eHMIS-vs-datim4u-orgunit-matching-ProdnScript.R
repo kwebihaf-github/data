@@ -865,3 +865,281 @@ data.table::fwrite(eHMIS_DATIM4U_orgunit_matching_all_temp_3,
                    row.names = FALSE)
 
 # to continue
+library(dplyr)
+#DATIM4UorgunitDataSubset
+
+#eHMIS_DATIM4U_orgunit_matching_all_temp_3
+#DATIM4UremainingToBeMatched
+
+DATIM4UMatched <-as.data.frame(eHMIS_DATIM4U_orgunit_matching_all_temp_3$DATIM4U_orgunit_uid)
+colnames(DATIM4UMatched) <-"ServiceOutlet"
+
+DATIM4UremainingToBeMatched <- DATIM4UorgunitDataSubset %>% 
+  dplyr::anti_join(DATIM4UMatched)
+
+#  Near Matching for those ToBeMatched
+
+#eHMISorgunitDataSubset
+
+eHMISorgunitDataSubset$`ServiceOutlet_name.ehmis` <- eHMISorgunitDataSubset$ServiceOutlet_name # adding additional column for merging
+
+# you first near match the two sides, then after you find out how close they are (using stringdist::stringdist())
+joined_ToBeMatched <-eHMISorgunitDataSubset[,c("ServiceOutlet","ServiceOutlet_name.ehmis","District_name")] %>% 
+  fuzzyjoin::stringdist_left_join(DATIM4UremainingToBeMatched[,c("ServiceOutlet","ServiceOutlet_name.datim","District_name")], 
+                                  by=c(ServiceOutlet_name.ehmis="ServiceOutlet_name.datim"),
+                                  distance_col="dist", method="jaccard", 
+                                  max_dist=0.4, ignore_case = TRUE)
+
+joined_ToBeMatched$Distance <- stringdist::stringdist(joined_ToBeMatched$`ServiceOutlet_name.ehmis`, joined_ToBeMatched$`ServiceOutlet_name.datim`) # important part for mapping, getting the closeness between the two parts
+
+joined_ToBeMatched$Distance_districts <- stringdist::stringdist(joined_ToBeMatched$`District_name.x`, joined_ToBeMatched$`District_name.y`)
+
+joined_ToBeMatched$Distance_serviceOutletNames_soundex  <- stringdist::stringdist(joined_ToBeMatched$`ServiceOutlet_name.ehmis`, joined_ToBeMatched$`ServiceOutlet_name.datim`, method = 'soundex') # using soundex
+   
+
+
+ joined_ToBeMatched %>% 
+  dplyr::count(Distance, sort=TRUE) %>%  head()
+ 
+ 
+# subsetting joined_ToBeMatched
+ eHMIS_DATIM4U_orgunit_ToBeMatched_1 <- joined_ToBeMatched %>% 
+   dplyr::filter(Distance_serviceOutletNames_soundex == 0 & Distance_districts==0) #where they sound the same and in the same district
+ 
+ # matching takes place here 
+ eHMIS_DATIM4U_orgunit_Matched_1 <- eHMIS_DATIM4U_orgunit_ToBeMatched_1 %>% 
+   dplyr::filter(Distance <= 1)
+ 
+ # subsetting eHMIS_DATIM4U_orgunit_Matched_1 
+ eHMIS_DATIM4U_orgunit_ToBeMatched_2 <- eHMIS_DATIM4U_orgunit_ToBeMatched_1 %>% 
+   dplyr::filter(Distance >=2 & Distance <=24)
+ 
+ # matching takes place here 
+ eHMIS_DATIM4U_orgunit_Matched_2 <- eHMIS_DATIM4U_orgunit_ToBeMatched_2 %>% 
+   dplyr::filter(dist == 0)
+ 
+ # subsetting eHMIS_DATIM4U_orgunit_ToBeMatched_2 
+ eHMIS_DATIM4U_orgunit_ToBeMatched_3 <- eHMIS_DATIM4U_orgunit_ToBeMatched_2 %>% 
+   dplyr::anti_join(eHMIS_DATIM4U_orgunit_Matched_2)
+ 
+ # matching takes place here 
+ eHMIS_DATIM4U_orgunit_Matched_3 <- eHMIS_DATIM4U_orgunit_ToBeMatched_3 %>% 
+   dplyr::filter(Distance >=2 & Distance <=4) %>% 
+   dplyr::filter(!(ServiceOutlet_name.ehmis=="Rapha Medical Centre" & ServiceOutlet_name.datim=="Ripon Medical Centre"))
+ 
+ # subsetting eHMIS_DATIM4U_orgunit_ToBeMatched_3 
+ eHMIS_DATIM4U_orgunit_ToBeMatched_4 <- eHMIS_DATIM4U_orgunit_ToBeMatched_3 %>% 
+   dplyr::anti_join(eHMIS_DATIM4U_orgunit_Matched_3)
+ 
+ # matching takes place here 
+ eHMIS_DATIM4U_orgunit_Matched_4 <- eHMIS_DATIM4U_orgunit_ToBeMatched_4 %>% 
+   dplyr::filter(Distance >=3 & Distance <=8) %>% 
+   dplyr::filter((ServiceOutlet.x=="Age86DCA0c3" &ServiceOutlet_name.ehmis=="Doctor's Clinic" &ServiceOutlet.y=="VtyXhdYoidp" &ServiceOutlet_name.datim=="Doctor`s Clinic Serere" |
+                     ServiceOutlet.x=="AKFDKJ5sKSW" &ServiceOutlet_name.ehmis=="Royal Health Care HC II" &ServiceOutlet.y=="e0pN9mh7DDa" &ServiceOutlet_name.datim=="Royal Health Care" |
+                     ServiceOutlet.x=="AUEXQv8yyQ4" &ServiceOutlet_name.ehmis=="Hellens Clinic HC II" &ServiceOutlet.y=="YBJqOurebJh" &ServiceOutlet_name.datim=="Hellen's Clinic" |
+                     ServiceOutlet.x=="aVoCPJIXuun" &ServiceOutlet_name.ehmis=="Bweyogerere Medical Centre HC II" &ServiceOutlet.y=="nxfaWduU4CW" &ServiceOutlet_name.datim=="Bweyogerere Medical Centre" |
+                     ServiceOutlet.x=="Blo1aN62cyE" &ServiceOutlet_name.ehmis=="Pillars Medical Centre HC II" &ServiceOutlet.y=="SIwN1XBiQLa" &ServiceOutlet_name.datim=="Pillars Medical Centre" |
+                     ServiceOutlet.x=="BMmZS6sQJyw" &ServiceOutlet_name.ehmis=="Kamwenge Medical Centre" &ServiceOutlet.y=="yW4ZTg6cnZ0" &ServiceOutlet_name.datim=="Kamwenge Medical Centre HCII" |
+                     ServiceOutlet.x=="bqcYbI3x1sY" &ServiceOutlet_name.ehmis=="Global Medicare Center HC II" &ServiceOutlet.y=="yfIH4NN0fPV" &ServiceOutlet_name.datim=="Global Medicare Centre" |
+                     ServiceOutlet.x=="BUKrloYEKHj" &ServiceOutlet_name.ehmis=="Kg Life Care Clinic" &ServiceOutlet.y=="Of49RveNbCJ" &ServiceOutlet_name.datim=="KG Lifecare Clinic HCII" |
+                     ServiceOutlet.x=="d6hRGy9iLd8" &ServiceOutlet_name.ehmis=="Center Clinic HC II" &ServiceOutlet.y=="AssTniZ7VlC" &ServiceOutlet_name.datim=="Centre Clinic" |
+                     ServiceOutlet.x=="dte1mdnBYoM" &ServiceOutlet_name.ehmis=="Anna Medical Centre HC II" &ServiceOutlet.y=="JkiVjsCoMXx" &ServiceOutlet_name.datim=="Anna Medical Centre" |
+                     ServiceOutlet.x=="e7LJGg7TItR" &ServiceOutlet_name.ehmis=="Jinja Medcare Clinic" &ServiceOutlet.y=="t1pGKeN5aY7" &ServiceOutlet_name.datim=="Jinja Medcare" |
+                     ServiceOutlet.x=="ExhseILVUNQ" &ServiceOutlet_name.ehmis=="Em's Health Clinic HC III" &ServiceOutlet.y=="EzUIKA1S1Th" &ServiceOutlet_name.datim=="EM`S Health Clinic III" |
+                     ServiceOutlet.x=="EyZf2HkJvV3" &ServiceOutlet_name.ehmis=="Gv Medical Center HC II" &ServiceOutlet.y=="hAwsyVlxMHk" &ServiceOutlet_name.datim=="GV Medical Centre" |
+                     ServiceOutlet.x=="f7n93to8Ktw" &ServiceOutlet_name.ehmis=="Mcneil Medical Centre" &ServiceOutlet.y=="Lcvje18Y4eq" &ServiceOutlet_name.datim=="McNeil Medical Centre HCII" |
+                     ServiceOutlet.x=="FKuNaclJDeD" &ServiceOutlet_name.ehmis=="Anyiribu HC III" &ServiceOutlet.y=="eqP5AAA38f6" &ServiceOutlet_name.datim=="anyiribu" |
+                     ServiceOutlet.x=="gozU6bjgH2h" &ServiceOutlet_name.ehmis=="St. Catherine Medical Center HC II" &ServiceOutlet.y=="ybEXuUN8tSg" &ServiceOutlet_name.datim=="St Catherine Medical Centre" |
+                     ServiceOutlet.x=="KUFnXlL4bk3" &ServiceOutlet_name.ehmis=="Abii Clinic HC IV" &ServiceOutlet.y=="xWzvlXKunlb" &ServiceOutlet_name.datim=="Abi Clinic" |
+                     ServiceOutlet.x=="LFhV54lMSwu" &ServiceOutlet_name.ehmis=="Globe Clinic HC II" &ServiceOutlet.y=="HSy9c8cF3m5" &ServiceOutlet_name.datim=="Globe Clinic" |
+                     ServiceOutlet.x=="MYzCGYUmL4t" &ServiceOutlet_name.ehmis=="Liberty Medical Centre HC II" &ServiceOutlet.y=="TqB3RE84PNd" &ServiceOutlet_name.datim=="Liberty Medical Centre" |
+                     ServiceOutlet.x=="nlCA2HNWuFV" &ServiceOutlet_name.ehmis=="Kalisizo Prison Clinic HC II" &ServiceOutlet.y=="qD1nq3r3aZ2" &ServiceOutlet_name.datim=="Kalisizo Prison Clinic" |
+                     ServiceOutlet.x=="OGk0nfcBuM8" &ServiceOutlet_name.ehmis=="Your Clinic HC II" &ServiceOutlet.y=="gqGPtHRknOH" &ServiceOutlet_name.datim=="Your Clinic" |
+                     ServiceOutlet.x=="Qvfoevzoi3N" &ServiceOutlet_name.ehmis=="Doctors Diagnostic Clinic HC II" &ServiceOutlet.y=="B9kVtthSL0v" &ServiceOutlet_name.datim=="Doctor's Diagnostic Clinic" |
+                     ServiceOutlet.x=="qYZPZV35BRO" &ServiceOutlet_name.ehmis=="Lugazi Police HC II" &ServiceOutlet.y=="CcqYFAy9o0i" &ServiceOutlet_name.datim=="Lugazi Police" |
+                     ServiceOutlet.x=="SDX1xOAUEKj" &ServiceOutlet_name.ehmis=="Life Link Medical Centre HC II" &ServiceOutlet.y=="BsfGx3McAKg" &ServiceOutlet_name.datim=="Life Link Medical Centre" |
+                     ServiceOutlet.x=="uxOQ8aiwSFp" &ServiceOutlet_name.ehmis=="Marie Stopes Uganda Bweyogerere HC II" &ServiceOutlet.y=="VZZ4a8D0knB" &ServiceOutlet_name.datim=="Mariestopes Clinic Bweyogerere HCII" |
+                     ServiceOutlet.x=="uZbjvt36X6V" &ServiceOutlet_name.ehmis=="Mb Medical Services HC II" &ServiceOutlet.y=="BzOlhq1O9HJ" &ServiceOutlet_name.datim=="MB Medical services" |
+                     ServiceOutlet.x=="uzQnq2eOgnd" &ServiceOutlet_name.ehmis=="Jb Clinic HC II" &ServiceOutlet.y=="wZT2RzXLu8Z" &ServiceOutlet_name.datim=="JB Clinic" |
+                     ServiceOutlet.x=="uZT6h3cOG5y" &ServiceOutlet_name.ehmis=="Family Care Medical Centre HC II" &ServiceOutlet.y=="U9a42lTYq9q" &ServiceOutlet_name.datim=="Family Care Medical Centre" |
+                     ServiceOutlet.x=="yeDXYRbILNm" &ServiceOutlet_name.ehmis=="Diva Medical Centre" &ServiceOutlet.y=="hLuOP2MGTGv" &ServiceOutlet_name.datim=="Diva Medical Centre HCIII" |
+                     ServiceOutlet.x=="a1DNpYv02JK" &ServiceOutlet_name.ehmis=="Pakwach Mission HC III" &ServiceOutlet.y=="Fxfs6HysZOX" &ServiceOutlet_name.datim=="Pakwach Mission Health Centre III" |
+                     ServiceOutlet.x=="a3rqRkgOyEV" &ServiceOutlet_name.ehmis=="Mbale General Clinic Health II" &ServiceOutlet.y=="eAmdEazgSVK" &ServiceOutlet_name.datim=="Mbale General Clinic" |
+                     ServiceOutlet.x=="a680eATOSPd" &ServiceOutlet_name.ehmis=="Buhara (Ngo) HC III" &ServiceOutlet.y=="h1kMB9WuThs" &ServiceOutlet_name.datim=="Buhara (Ngo) Health Centre III" |
+                     ServiceOutlet.x=="a6b9OQh6Y8L" &ServiceOutlet_name.ehmis=="J.K Medi-Care Clinic HC II" &ServiceOutlet.y=="mFTm0ubva5H" &ServiceOutlet_name.datim=="JK Medi-Care Clinic Health Centre II" |
+                     ServiceOutlet.x=="a6G1rz13Unf" &ServiceOutlet_name.ehmis=="Paragon Medical Clinic HC II" &ServiceOutlet.y=="QflGY07DrZz" &ServiceOutlet_name.datim=="Paragon Medical Clinic Health Centre II" |
+                     ServiceOutlet.x=="a6h04I37hOu" &ServiceOutlet_name.ehmis=="Family Health Clinic (Kiboga) HC II" &ServiceOutlet.y=="a6rvjkpcXYD" &ServiceOutlet_name.datim=="Family Health Clinic Health Centre II" |
+                     ServiceOutlet.x=="a8Qm23qwGwy" &ServiceOutlet_name.ehmis=="Namungalwe HC III" &ServiceOutlet.y=="KIdUUpSJe9y" &ServiceOutlet_name.datim=="Namungalwe Health Centre III" |
+                     ServiceOutlet.x=="abMk2o2JMM7" &ServiceOutlet_name.ehmis=="Najanankumbi K Clinic HC II" &ServiceOutlet.y=="O1dQAaCh9eb" &ServiceOutlet_name.datim=="Najjanankumbi K Health Centre II" |
+                     ServiceOutlet.x=="abvRm5Gf8UC" &ServiceOutlet_name.ehmis=="Sure Clinic HC II" &ServiceOutlet.y=="Qv7dSTNiyWD" &ServiceOutlet_name.datim=="Sure Clinic Health Centre II" |
+                     ServiceOutlet.x=="ac7OhvMEosK" &ServiceOutlet_name.ehmis=="Nabbingo HC II" &ServiceOutlet.y=="zovGIP4zEBo" &ServiceOutlet_name.datim=="Nabbingo Health Centre II" |
+                     ServiceOutlet.x=="AcJBataZEgg" &ServiceOutlet_name.ehmis=="Florence Medic Drug Supplies HC II" &ServiceOutlet.y=="QGcjc6muumo" &ServiceOutlet_name.datim=="Florence Medic Drug Supplies Health Centre II" |
+                     ServiceOutlet.x=="aczRbyTZuz8" &ServiceOutlet_name.ehmis=="Patience Maternity Home HC II" &ServiceOutlet.y=="f4yy1Ouc1jl" &ServiceOutlet_name.datim=="Patience Maternity Home Health Centre II" |
+                     ServiceOutlet.x=="aD1S6DBzHJV" &ServiceOutlet_name.ehmis=="Ongica HC III" &ServiceOutlet.y=="AmJKLdZPk8m" &ServiceOutlet_name.datim=="Ongica HCIII --Delete" |
+                     ServiceOutlet.x=="adaEKqgk4SF" &ServiceOutlet_name.ehmis=="Q & J Clinic HC II" &ServiceOutlet.y=="FOvdFBrnxRP" &ServiceOutlet_name.datim=="Q & J Clinic Health Centre II" |
+                     ServiceOutlet.x=="aDcEum2g6mY" &ServiceOutlet_name.ehmis=="Kanywambogo HC III" &ServiceOutlet.y=="lb7LohwkD5i" &ServiceOutlet_name.datim=="Kanywambogo Health Centre III" |
+                     ServiceOutlet.x=="adncZQdcSzE" &ServiceOutlet_name.ehmis=="Nyakatookye HC II" &ServiceOutlet.y=="FXcDNBYnWBt" &ServiceOutlet_name.datim=="Nyakatokye Health Centre II" |
+                     ServiceOutlet.x=="adW7QMFjyjd" &ServiceOutlet_name.ehmis=="Mpulira HC II - Ngo" &ServiceOutlet.y=="zBtqLUTWLt7" &ServiceOutlet_name.datim=="Mpulira Health Centre II - NGO" |
+                     ServiceOutlet.x=="aE1Vh9TGsK2" &ServiceOutlet_name.ehmis=="St. Thereza Domiciliary HC II" &ServiceOutlet.y=="cMstGGQslFP" &ServiceOutlet_name.datim=="St. Thereza Domiciary Health Centre II" |
+                     ServiceOutlet.x=="aFr56s147t5" &ServiceOutlet_name.ehmis=="Kyabigondo HC II" &ServiceOutlet.y=="Fn1FedwVKNj" &ServiceOutlet_name.datim=="Kyabigondo Health Centre II" |
+                     ServiceOutlet.x=="aG2h9UI08nA" &ServiceOutlet_name.ehmis=="Bugangari HC IV" &ServiceOutlet.y=="IhkPOGxxs1R" &ServiceOutlet_name.datim=="Bugangari Health Centre IV" |
+                     ServiceOutlet.x=="ajFglpQB0DX" &ServiceOutlet_name.ehmis=="Kanyanda HC II" &ServiceOutlet.y=="H0iMMoTGZpz" &ServiceOutlet_name.datim=="Kanyanda Health Centre II" |
+                     ServiceOutlet.x=="aJW3cbEYSpE" &ServiceOutlet_name.ehmis=="Kisalizi HC II" &ServiceOutlet.y=="xMy4I78bh65" &ServiceOutlet_name.datim=="Kisalizi Health Centre II" |
+                     ServiceOutlet.x=="akc4IXZ7N3m" &ServiceOutlet_name.ehmis=="Shanyonja HC II" &ServiceOutlet.y=="XbckXwNX9Gs" &ServiceOutlet_name.datim=="Syanyonja Health Centre II" |
+                     ServiceOutlet.x=="aKP6B0Z5nbZ" &ServiceOutlet_name.ehmis=="Bardege HC III" &ServiceOutlet.y=="Gqb9MjiwxU5" &ServiceOutlet_name.datim=="Bar-dege Health Centre III" |
+                     ServiceOutlet.x=="aLQa0i8ndtW" &ServiceOutlet_name.ehmis=="St. Steven Clinic HC II" &ServiceOutlet.y=="PyistmIxUhW" &ServiceOutlet_name.datim=="St. Steven Clinic Health Centre II" |
+                     ServiceOutlet.x=="aMcxqYcYtot" &ServiceOutlet_name.ehmis=="Kampala Poly Clinic HC II" &ServiceOutlet.y=="T06OUQPdCWs" &ServiceOutlet_name.datim=="Kampala Poly Clinic Health Centre II" |
+                     ServiceOutlet.x=="aNchHEjSnch" &ServiceOutlet_name.ehmis=="Bukedea Mission HC II" &ServiceOutlet.y=="cf6jIlGBkS9" &ServiceOutlet_name.datim=="Bukedea Mission Health Centre II" |
+                     ServiceOutlet.x=="aND7XoaR2P9" &ServiceOutlet_name.ehmis=="Mushumba HC II" &ServiceOutlet.y=="WpQKE9UZLkH" &ServiceOutlet_name.datim=="Mushumba Health Centre II" |
+                     ServiceOutlet.x=="aNW8E8PWwck" &ServiceOutlet_name.ehmis=="Palabek-Gem HC III" &ServiceOutlet.y=="BT1UERKCwd4" &ServiceOutlet_name.datim=="Palabek-Gem Health Centre III" |
+                     ServiceOutlet.x=="aoKwhABrCpq" &ServiceOutlet_name.ehmis=="Kasheregyenyi HC II" &ServiceOutlet.y=="dfiQi9pYCCT" &ServiceOutlet_name.datim=="Kasheregenyi Health Centre II" |
+                     ServiceOutlet.x=="aPw8BIgtIDF" &ServiceOutlet_name.ehmis=="Nsamu/Kyali HC III" &ServiceOutlet.y=="iTy2HiovQAQ" &ServiceOutlet_name.datim=="Nsamu/Kyali Health Centre III" |
+                     ServiceOutlet.x=="aR0Ye42mrx8" &ServiceOutlet_name.ehmis=="Rwamwijuka HC II" &ServiceOutlet.y=="pldSeNhzIj5" &ServiceOutlet_name.datim=="Rwamwijuka Health Centre II" |
+                     ServiceOutlet.x=="ar4RR2FBfKU" &ServiceOutlet_name.ehmis=="Ntungu HC II" &ServiceOutlet.y=="hFE8IvB8W7U" &ServiceOutlet_name.datim=="Ntungu Health Centre II" |
+                     ServiceOutlet.x=="aRRsrxSesDy" &ServiceOutlet_name.ehmis=="Kewerimidde HC II" &ServiceOutlet.y=="s6HI2G13IrC" &ServiceOutlet_name.datim=="Kawerimidde Health Centre II" |
+                     ServiceOutlet.x=="AtuVg4C11UO" &ServiceOutlet_name.ehmis=="Mbale Main Prisons HC III" &ServiceOutlet.y=="P8uWKDFdQYe" &ServiceOutlet_name.datim=="Mbale Main Prision's Health Centre III" |
+                     ServiceOutlet.x=="atvpY5SsE88" &ServiceOutlet_name.ehmis=="Indilinga HC II" &ServiceOutlet.y=="HfQ1S203paW" &ServiceOutlet_name.datim=="Indiliga Health Centre II" |
+                     ServiceOutlet.x=="aTvsnjjZTyN" &ServiceOutlet_name.ehmis=="Kyanamukaaka HC IV" &ServiceOutlet.y=="XwOyLbdtAx3" &ServiceOutlet_name.datim=="Kyannamukaaka Health Centre IV" |
+                     ServiceOutlet.x=="aXGjPN0urzK" &ServiceOutlet_name.ehmis=="Koboko Mission HC III" &ServiceOutlet.y=="i9QAlHz8kSp" &ServiceOutlet_name.datim=="Koboko Mission Health Centre III" |
+                     ServiceOutlet.x=="B3W5yafHqZE" &ServiceOutlet_name.ehmis=="Kigalama Govt HC II" &ServiceOutlet.y=="xII4xr8b0mR" &ServiceOutlet_name.datim=="Kigalama (Govt) Health Centre II" |
+                     ServiceOutlet.x=="bAh0tns9mFX" &ServiceOutlet_name.ehmis=="Nakifuma HC III" &ServiceOutlet.y=="bBH0FEU8PDN" &ServiceOutlet_name.datim=="Nakifuma Health Centre III" ))
+ 
+ # matching takes place here 
+ eHMIS_DATIM4U_orgunit_Matched_5 <- eHMIS_DATIM4U_orgunit_ToBeMatched_4 %>% 
+   dplyr::filter(Distance >=8 & Distance <=13) %>%
+  dplyr::filter(grepl("HC", ServiceOutlet_name.ehmis) & grepl("Health Centre", ServiceOutlet_name.datim)) %>% 
+   dplyr::filter(!(ServiceOutlet.x=="aB5vYQeUHae" &ServiceOutlet_name.ehmis=="Life Standard Medical Centre HC II" &ServiceOutlet.y=="bqzDOX6ecvQ" &ServiceOutlet_name.datim=="Life Star Health Centre II" |
+                     ServiceOutlet.x=="AbQGl8CrhXH" &ServiceOutlet_name.ehmis=="Patongo Prison HC II" &ServiceOutlet.y=="yqMIrpBNXnq" &ServiceOutlet_name.datim=="Patongo Health Centre III" |
+                     ServiceOutlet.x=="adwWHZXOk8h" &ServiceOutlet_name.ehmis=="Sena Medical Clinic HC II" &ServiceOutlet.y=="cYkOw5X1YFr" &ServiceOutlet_name.datim=="Shina Medical Clinic Health Centre II" |
+                     ServiceOutlet.x=="aG3pNEZqZdA" &ServiceOutlet_name.ehmis=="St. Agnes Clinic (Nateete) HC II" &ServiceOutlet.y=="HsbHpz6aQ4b" &ServiceOutlet_name.datim=="St. James Clinic Health Centre II" |
+                     ServiceOutlet.x=="AhLbPGoqf7F" &ServiceOutlet_name.ehmis=="Ongino General HC II" &ServiceOutlet.y=="hEESSI2gqlM" &ServiceOutlet_name.datim=="Ongino Health Centre III" |
+                     ServiceOutlet.x=="am0vQYNJohR" &ServiceOutlet_name.ehmis=="Jengari HC II" &ServiceOutlet.y=="REdoZmqLWQK" &ServiceOutlet_name.datim=="Jeng-Gari Health Centre II" |
+                     ServiceOutlet.x=="Ap53MmxflW6" &ServiceOutlet_name.ehmis=="Hope Clinic Lukuli HC III" &ServiceOutlet.y=="HLpu21TYlUx" &ServiceOutlet_name.datim=="Hope Clinic Health Centre II" |
+                     ServiceOutlet.x=="aRE0Ejk5hdp" &ServiceOutlet_name.ehmis=="Nabiswera HC IV" &ServiceOutlet.y=="w5NMYjqncXB" &ServiceOutlet_name.datim=="Nabiswera Health Centre III" |
+                     ServiceOutlet.x=="avKz7P8ctz4" &ServiceOutlet_name.ehmis=="Fellowship Medical Centre HC III" &ServiceOutlet.y=="QZHNhWKI7wW" &ServiceOutlet_name.datim=="Fellow Ship Health Centre II" |
+                     ServiceOutlet.x=="aVoCPJIXuun" &ServiceOutlet_name.ehmis=="Bweyogerere Medical Centre HC II" &ServiceOutlet.y=="ErvdXsvaapg" &ServiceOutlet_name.datim=="Bweyogerere SDA Health Centre III" |
+                     ServiceOutlet.x=="boTY4zS1Br8" &ServiceOutlet_name.ehmis=="Anajimu Medical Centre HC II" &ServiceOutlet.y=="gbQIYMM7CS6" &ServiceOutlet_name.datim=="Anajim Clinic Health Centre II" |
+                     ServiceOutlet.x=="cwGt2cWV5TN" &ServiceOutlet_name.ehmis=="Nabiganda HC IV" &ServiceOutlet.y=="LpogeJinKOO" &ServiceOutlet_name.datim=="Nabiganda Health Centre III" |
+                     ServiceOutlet.x=="dPHGsGPWCmY" &ServiceOutlet_name.ehmis=="Tororo Police HC III" &ServiceOutlet.y=="xTVYvXL6i2W" &ServiceOutlet_name.datim=="Tororo Police Health Centre II" |
+                     ServiceOutlet.x=="DPRgzXMkh9U" &ServiceOutlet_name.ehmis=="Kajjansi HC IV" &ServiceOutlet.y=="xrilvxOCD7v" &ServiceOutlet_name.datim=="Kajjansi Health Centre III" |
+                     ServiceOutlet.x=="dWiH5rblNL5" &ServiceOutlet_name.ehmis=="Banda Community Health Centre HC II" &ServiceOutlet.y=="vVAlBUnItV1" &ServiceOutlet_name.datim=="Banda Comm Dev Progm Health Centre II" |
+                     ServiceOutlet.x=="E9FHg5HyYzC" &ServiceOutlet_name.ehmis=="St. Francis (Ocodri) HC III" &ServiceOutlet.y=="G5lgHlV4LMA" &ServiceOutlet_name.datim=="St. Francis Health Centre III" |
+                     ServiceOutlet.x=="eAuFbAc1MUZ" &ServiceOutlet_name.ehmis=="Panyadoli Hill HC II" &ServiceOutlet.y=="EU3bRi7KNLO" &ServiceOutlet_name.datim=="Panyadoli Hill Health Centre II" |
+                     ServiceOutlet.x=="EiF3piKONJO" &ServiceOutlet_name.ehmis=="St. Mary's Salalira HC III" &ServiceOutlet.y=="BHpTGcuHn7M" &ServiceOutlet_name.datim=="St. Mary`s Health Centre" |
+                     ServiceOutlet.x=="EqoaWG6hZmv" &ServiceOutlet_name.ehmis=="St. Mark Medical Cetre HC II" &ServiceOutlet.y=="oQDZ5VDHu2c" &ServiceOutlet_name.datim=="St. Martin Health Centre II" |
+                     ServiceOutlet.x=="EuOjc4l3RJ4" &ServiceOutlet_name.ehmis=="St. Bernard Medicare HC II" &ServiceOutlet.y=="rhFhtExhfvf" &ServiceOutlet_name.datim=="St. Bernard'S Health Centre II" |
+                     ServiceOutlet.x=="ev1JnEmvQe0" &ServiceOutlet_name.ehmis=="Nyamiringa HC III" &ServiceOutlet.y=="tAbIeuiBKfR" &ServiceOutlet_name.datim=="Namiringa Health Centre II" |
+                     ServiceOutlet.x=="ExhseILVUNQ" &ServiceOutlet_name.ehmis=="Em's Health Clinic HC III" &ServiceOutlet.y=="sRFn1OMMyxG" &ServiceOutlet_name.datim=="EMESCO Health Centre III" |
+                     ServiceOutlet.x=="EyJbnAQLHR2" &ServiceOutlet_name.ehmis=="Shalom Medical Clinic HC II" &ServiceOutlet.y=="xoqDXnO9qrJ" &ServiceOutlet_name.datim=="Shiloh Medical Clinic Health Centre II" |
+                     ServiceOutlet.x=="EZA6XG2Eqra" &ServiceOutlet_name.ehmis=="Moyo Mission HC IV" &ServiceOutlet.y=="lErB40IR6Ci" &ServiceOutlet_name.datim=="Moyo Mission Health Centre III" |
+                     ServiceOutlet.x=="FgldlD8VLgC" &ServiceOutlet_name.ehmis=="Nakifuma Prison HC II" &ServiceOutlet.y=="bBH0FEU8PDN" &ServiceOutlet_name.datim=="Nakifuma Health Centre III" |
+                     ServiceOutlet.x=="fsjtVOC0Bu3" &ServiceOutlet_name.ehmis=="St. Mark Medical Centre HC II" &ServiceOutlet.y=="oQDZ5VDHu2c" &ServiceOutlet_name.datim=="St. Martin Health Centre II" |
+                     ServiceOutlet.x=="FVZifzVfB2S" &ServiceOutlet_name.ehmis=="Mukama Kyakuwa Clinic HC II" &ServiceOutlet.y=="iSAGnVcbGvH" &ServiceOutlet_name.datim=="Mukama Kyakuwa Health Centre II" |
+                     ServiceOutlet.x=="FWFO4gWgFSk" &ServiceOutlet_name.ehmis=="Our Lady Nakasongola HC III" &ServiceOutlet.y=="X4h3Dh16MyG" &ServiceOutlet_name.datim=="Our Lady Health Centre III" |
+                     ServiceOutlet.x=="fXKRSDL6Xri" &ServiceOutlet_name.ehmis=="Busingye Medical Centre HC II" &ServiceOutlet.y=="IqzrHrsCAKw" &ServiceOutlet_name.datim=="Busingye Clinic Health Centre II" |
+                     ServiceOutlet.x=="fXKRSDL6Xri" &ServiceOutlet_name.ehmis=="Busingye Medical Centre HC II" &ServiceOutlet.y=="VS0arKDzut8" &ServiceOutlet_name.datim=="Busingyo Clinic Health Centre II" |
+                     ServiceOutlet.x=="g4eDmlzUtWL" &ServiceOutlet_name.ehmis=="Kakoro SDA Dispensary HC II" &ServiceOutlet.y=="GtdLBoOgKrq" &ServiceOutlet_name.datim=="Kakoro SDA Health Centre II" |
+                     ServiceOutlet.x=="GaSVQD2cOzL" &ServiceOutlet_name.ehmis=="Saidina Abubakar Nursing Home HC III" &ServiceOutlet.y=="ItASaZIi3nI" &ServiceOutlet_name.datim=="Saidina Abubaker Nursing Home Health Centre II" |
+                     ServiceOutlet.x=="gozU6bjgH2h" &ServiceOutlet_name.ehmis=="St. Catherine Medical Center HC II" &ServiceOutlet.y=="pRBhndaEJb3" &ServiceOutlet_name.datim=="St. Catherine Clinic Health Centre II" |
+                     ServiceOutlet.x=="h67U9AijmDA" &ServiceOutlet_name.ehmis=="Jinja All Saints Kagoma HC III" &ServiceOutlet.y=="Wrg7XOgMfLz" &ServiceOutlet_name.datim=="Jinja All Saints Health Centre II" |
+                     ServiceOutlet.x=="HIpoOqCIQgV" &ServiceOutlet_name.ehmis=="Rwenshambya HC II" &ServiceOutlet.y=="vBVI9YyCbls" &ServiceOutlet_name.datim=="Rwenshamya Health Centre II" |
+                     ServiceOutlet.x=="I6QbcVsphVT" &ServiceOutlet_name.ehmis=="AAR Clinic Acacia HC II" &ServiceOutlet.y=="CyK3vcYkFIj" &ServiceOutlet_name.datim=="AAR Clinic Health Centre II" |
+                     ServiceOutlet.x=="idkNxrymxSW" &ServiceOutlet_name.ehmis=="Bugungu Yp Prison HC II" &ServiceOutlet.y=="EubaNORvPcm" &ServiceOutlet_name.datim=="Bugungu YO Prison Health Centre II" |
+                     ServiceOutlet.x=="IqShqwgt8mf" &ServiceOutlet_name.ehmis=="San Medical Crntre HC II" &ServiceOutlet.y=="GAZHVPWS90G" &ServiceOutlet_name.datim=="Skan Medical Centre Health Centre II" |
+                     ServiceOutlet.x=="J8lqAR46pse" &ServiceOutlet_name.ehmis=="Lugazi Muslim HC III" &ServiceOutlet.y=="GvfeyLkPxfz" &ServiceOutlet_name.datim=="Lugazi Muslim Health Centre II" |
+                     ServiceOutlet.x=="Jb3ruV9NJ4K" &ServiceOutlet_name.ehmis=="Kisa Kyamukama Makindye HC II" &ServiceOutlet.y=="bMSirgitELq" &ServiceOutlet_name.datim=="Kisakyamukama Health Centre II" |
+                     ServiceOutlet.x=="jhP6JvFuXoU" &ServiceOutlet_name.ehmis=="Mbuya Clinic HC II" &ServiceOutlet.y=="S635ZAsWMu5" &ServiceOutlet_name.datim=="Muva Clinic Health Centre II" |
+                     ServiceOutlet.x=="JJZe7WMe7Z1" &ServiceOutlet_name.ehmis=="Sims Clinic HC II" &ServiceOutlet.y=="GcA5WUyIe8N" &ServiceOutlet_name.datim=="Sam Clinic Health Centre II" |
+                     ServiceOutlet.x=="Jk4Ws9uWKqb" &ServiceOutlet_name.ehmis=="Bugungu Yo Prison HC II" &ServiceOutlet.y=="LURniXlGxuY" &ServiceOutlet_name.datim=="Bugungu YP Prison Health Centre II" |
+                     ServiceOutlet.x=="jM0QE9Wtu6L" &ServiceOutlet_name.ehmis=="Kitalya Prisons HC II" &ServiceOutlet.y=="Gc32guG0oKj" &ServiceOutlet_name.datim=="Kitala Prisons Health CentreII" |
+                     ServiceOutlet.x=="KETYpFB0Gpn" &ServiceOutlet_name.ehmis=="St. Mark Medical Center HC II" &ServiceOutlet.y=="oQDZ5VDHu2c" &ServiceOutlet_name.datim=="St. Martin Health Centre II" |
+                     ServiceOutlet.x=="kggrthitjzr" &ServiceOutlet_name.ehmis=="Life Saver Medical Centre HC II" &ServiceOutlet.y=="Fl0oidCsEoE" &ServiceOutlet_name.datim=="Life Savers Clinic Health Centre II" |
+                     ServiceOutlet.x=="Ku0I5IciWi3" &ServiceOutlet_name.ehmis=="Victory Medical Centre HC II" &ServiceOutlet.y=="W0oglafFPkt" &ServiceOutlet_name.datim=="Victory Health Health Centre II" |
+                     ServiceOutlet.x=="l5C1tkKf11K" &ServiceOutlet_name.ehmis=="Ongutoi HC III" &ServiceOutlet.y=="ojS5MSKgxHs" &ServiceOutlet_name.datim=="Onguto Health Centre III" |
+                     ServiceOutlet.x=="LBq7q7rovGE" &ServiceOutlet_name.ehmis=="Canaanite Health Center HC II" &ServiceOutlet.y=="QcTVbGO0jYf" &ServiceOutlet_name.datim=="Community Med. Health Centre II" |
+                     ServiceOutlet.x=="Lgs45wMr4Ua" &ServiceOutlet_name.ehmis=="Bupadhengo Flep HC II" &ServiceOutlet.y=="O8Opve9M9Hg" &ServiceOutlet_name.datim=="Bupadhengo Health Centre III" |
+                     ServiceOutlet.x=="lIIOj56WBOF" &ServiceOutlet_name.ehmis=="Butuntumula Prison HC II" &ServiceOutlet.y=="qwvr2aWTESO" &ServiceOutlet_name.datim=="Butuntumula Health Centre III" |
+                     ServiceOutlet.x=="Lj5ibr8aice" &ServiceOutlet_name.ehmis=="Nakisunga Prison HC II" &ServiceOutlet.y=="Qxy0bfGfodI" &ServiceOutlet_name.datim=="Nakisunga Health Centre III" |
+                     ServiceOutlet.x=="lwlvBRRVEVN" &ServiceOutlet_name.ehmis=="Friends Medical Centre HC II" &ServiceOutlet.y=="zQWKVCCkv8t" &ServiceOutlet_name.datim=="Friends Valley Health Centre II" |
+                     ServiceOutlet.x=="m8iIXo1Saga" &ServiceOutlet_name.ehmis=="Rapha Medical Centre HC III" &ServiceOutlet.y=="Q23Z0j9A3Ss" &ServiceOutlet_name.datim=="Rapha Medical Centre- Health Centre II" |
+                     ServiceOutlet.x=="mvtqd7EGRAM" &ServiceOutlet_name.ehmis=="Kisakye Health Center HC II" &ServiceOutlet.y=="QG4V1hCxTbT" &ServiceOutlet_name.datim=="Kisugu Health Centre III" |
+                     ServiceOutlet.x=="mXVB3V7ft4h" &ServiceOutlet_name.ehmis=="Ayivu Health Centre HC III" &ServiceOutlet.y=="FYUwbTPE9nT" &ServiceOutlet_name.datim=="Apo Health Centre II" |
+                     ServiceOutlet.x=="nP8o3jXx1WF" &ServiceOutlet_name.ehmis=="Platinum Medical Centre HC IV" &ServiceOutlet.y=="fsDEciGm1d3" &ServiceOutlet_name.datim=="Platinum Medical Centre Health Centre III" |
+                     ServiceOutlet.x=="Ob2khLTIpAW" &ServiceOutlet_name.ehmis=="Kyanja Community Health Centre HC II" &ServiceOutlet.y=="PKLZNuPhGeA" &ServiceOutlet_name.datim=="Konge Clinic Health Centre II" |
+                     ServiceOutlet.x=="okLSLD0KEwv" &ServiceOutlet_name.ehmis=="St. Joseph Medical Centre HC III" &ServiceOutlet.y=="Vh63cTB9Xc8" &ServiceOutlet_name.datim=="St. Kizito Health Centre HCIII" |
+                     ServiceOutlet.x=="OwpzGOcbJxc" &ServiceOutlet_name.ehmis=="Mulunox Medical Centre HC II" &ServiceOutlet.y=="uwmONy1YyQW" &ServiceOutlet_name.datim=="Mulungi Medical Centre Health Centre II" |
+                     ServiceOutlet.x=="p0fJEq6m1ew" &ServiceOutlet_name.ehmis=="TASO Soroti Special Clinic" &ServiceOutlet.y=="t3KC7IQ5qjS" &ServiceOutlet_name.datim=="TASO Soroti CLINIC" |
+                     ServiceOutlet.x=="Pd6q0Mtx9Lu" &ServiceOutlet_name.ehmis=="Peak Medical Centre HC II" &ServiceOutlet.y=="VjzkUrIDCVn" &ServiceOutlet_name.datim=="Peace Medical Centre Health Centre II" |
+                     ServiceOutlet.x=="PhsfViO0gu2" &ServiceOutlet_name.ehmis=="Life Care Medical Clinic (Kyebando) HC II" &ServiceOutlet.y=="cd5ZMZAQOiA" &ServiceOutlet_name.datim=="Life Care Medical Clinic Kitintale HCII" |
+                     ServiceOutlet.x=="pMbWcRf3ZsC" &ServiceOutlet_name.ehmis=="Victoria Medical Centre (Masajja) HC III" &ServiceOutlet.y=="TMBOxn35U2Z" &ServiceOutlet_name.datim=="Victoria Medical Centre -Entebbe CLINIC" |
+                     ServiceOutlet.x=="Ppyz6vwPpKi" &ServiceOutlet_name.ehmis=="AAR Clinic Bweyogerere HC II" &ServiceOutlet.y=="ggyTeqC74MQ" &ServiceOutlet_name.datim=="AAR clinic Freedom City HCII" |
+                     ServiceOutlet.x=="ptxlYr62NSB" &ServiceOutlet_name.ehmis=="Labian Medical Centre HC II" &ServiceOutlet.y=="jTHypdiVZTX" &ServiceOutlet_name.datim=="Lubowa Medical Clinic HCII" |
+                     ServiceOutlet.x=="pvMhc7H31I2" &ServiceOutlet_name.ehmis=="Tripple B Medical Clinic" &ServiceOutlet.y=="C9NxYKmDsgl" &ServiceOutlet_name.datim=="Travellers Clinic" |
+                     ServiceOutlet.x=="qgcvP6v3ElR" &ServiceOutlet_name.ehmis=="Rahma Clinic HC II" &ServiceOutlet.y=="wZtMfgyzcwq" &ServiceOutlet_name.datim=="Rhema Clinic Health Centre II" |
+                     ServiceOutlet.x=="R43DSu1tUIj" &ServiceOutlet_name.ehmis=="Katungu Mission HC III" &ServiceOutlet.y=="lrdrIuCB9xW" &ServiceOutlet_name.datim=="Katungu Health Centre II" |
+                     ServiceOutlet.x=="rfk0AEPFYk5" &ServiceOutlet_name.ehmis=="Nyakadoti HC II" &ServiceOutlet.y=="rqy55F2sPNv" &ServiceOutlet_name.datim=="Nyakadot Health Centre III" |
+                     ServiceOutlet.x=="Ru4lS70azm9" &ServiceOutlet_name.ehmis=="Vyne Medical Centre HC II" &ServiceOutlet.y=="k0Utclon6os" &ServiceOutlet_name.datim=="Vine Med Health Centre II" |
+                     ServiceOutlet.x=="RXMQeaZcjjG" &ServiceOutlet_name.ehmis=="Nalinya Ndagire HC III" &ServiceOutlet.y=="HGkypbucq4X" &ServiceOutlet_name.datim=="Nalinnya Ndagire Health Centre II" |
+                     ServiceOutlet.x=="sKqfvslNASd" &ServiceOutlet_name.ehmis=="Kaberamaido Police HC II" &ServiceOutlet.y=="Bkg0Vf75NSq" &ServiceOutlet_name.datim=="Kaberamaido Health Centre IV" |
+                     ServiceOutlet.x=="sUuGsTZpCxT" &ServiceOutlet_name.ehmis=="Katooke Health Clinic HC II" &ServiceOutlet.y=="DfKqGD39T5k" &ServiceOutlet_name.datim=="Katooke Health Centre III" |
+                     ServiceOutlet.x=="tqKvua1F3MU" &ServiceOutlet_name.ehmis=="Devine Clinic HC II" &ServiceOutlet.y=="LSgXrd2W0th" &ServiceOutlet_name.datim=="Divine Clinic Health Centre II" |
+                     ServiceOutlet.x=="TXw7G3pIJE0" &ServiceOutlet_name.ehmis=="State House HC IV" &ServiceOutlet.y=="COdQ356DNat" &ServiceOutlet_name.datim=="State House Health Centre II" |
+                     ServiceOutlet.x=="uiiH4IURTuT" &ServiceOutlet_name.ehmis=="Kabirizi Lower HC II" &ServiceOutlet.y=="hrtQZzyx0ij" &ServiceOutlet_name.datim=="Kabirizi 2 Health Centre II" |
+                     ServiceOutlet.x=="uzQnq2eOgnd" &ServiceOutlet_name.ehmis=="Jb Clinic HC II" &ServiceOutlet.y=="Y2GNwAoXsqU" &ServiceOutlet_name.datim=="Jubi Clinic Health Centre II" |
+                     ServiceOutlet.x=="ViVCNsxZYF4" &ServiceOutlet_name.ehmis=="Kabirizi Upper HC II" &ServiceOutlet.y=="hrtQZzyx0ij" &ServiceOutlet_name.datim=="Kabirizi 2 Health Centre II" |
+                     ServiceOutlet.x=="W6xq6GhydXm" &ServiceOutlet_name.ehmis=="Kisakye Maternity Centre HC II" &ServiceOutlet.y=="YRhwzBVWyAP" &ServiceOutlet_name.datim=="Kisaasi Maternity Health Centre II" |
+                     ServiceOutlet.x=="WByrVzVSS8z" &ServiceOutlet_name.ehmis=="Anyangatir HC III" &ServiceOutlet.y=="jD0UnpNdkAH" &ServiceOutlet_name.datim=="Anyangatir Health Centre II" |
+                     ServiceOutlet.x=="wKczE4oVqOy" &ServiceOutlet_name.ehmis=="Kalungu HC III" &ServiceOutlet.y=="dg3wXIL7pH7" &ServiceOutlet_name.datim=="Kalungi Health Centre II" |
+                     ServiceOutlet.x=="wqsIFyvLng4" &ServiceOutlet_name.ehmis=="Kitante Medical Centre HC IV" &ServiceOutlet.y=="mMvaxXKe5gK" &ServiceOutlet_name.datim=="Kitante Medical Center Health Centre II" |
+                     ServiceOutlet.x=="Wwj8be6FRkT" &ServiceOutlet_name.ehmis=="Ttula Clinic HC II" &ServiceOutlet.y=="LMK4uv6RofO" &ServiceOutlet_name.datim=="Tuula Clinic Health Centre II" |
+                     ServiceOutlet.x=="X3ZIaE3ccDb" &ServiceOutlet_name.ehmis=="Mushenene HC III" &ServiceOutlet.y=="NmuMElPcfET" &ServiceOutlet_name.datim=="Musyenene Health Centre III" |
+                     ServiceOutlet.x=="X7iYabwpJfR" &ServiceOutlet_name.ehmis=="Mutukula HC III" &ServiceOutlet.y=="vEQv3z66rlu" &ServiceOutlet_name.datim=="Mitukula Health Centre III" |
+                     ServiceOutlet.x=="YGb3TGRjmYq" &ServiceOutlet_name.ehmis=="Kd Clinic HC II" &ServiceOutlet.y=="GOdjriE2xUy" &ServiceOutlet_name.datim=="Ked Clinic Health Centre II" |
+                     ServiceOutlet.x=="Z4327slMc14" &ServiceOutlet_name.ehmis=="Bubulo Walanga HC II" &ServiceOutlet.y=="YaXTD0ib6bG" &ServiceOutlet_name.datim=="Bubulo Health Centre IV")) 
+ 
+ # matching takes place here 
+ eHMIS_DATIM4U_orgunit_Matched_6 <- eHMIS_DATIM4U_orgunit_ToBeMatched_4 %>% 
+   dplyr::filter(Distance >=14 & Distance <=19) %>% 
+   dplyr::filter((ServiceOutlet.x=="B2H2ffGYIGG" &ServiceOutlet_name.ehmis=="Tusuubira Med. Cent HC II" &ServiceOutlet.y=="eIe54mnEtKu" &ServiceOutlet_name.datim=="Tusubira Medical Centre Health Centre II" |
+                    ServiceOutlet.x=="k58XY2uVEjN" &ServiceOutlet_name.ehmis=="Bihanga UPDF Barracks HC II" &ServiceOutlet.y=="EN7d7UgJEuQ" &ServiceOutlet_name.datim=="Bihanga Updf Baracks Health Centre II" |
+                    ServiceOutlet.x=="MxuyoEUEPpk" &ServiceOutlet_name.ehmis=="Living Proof Community HC III" &ServiceOutlet.y=="mUEGWXCQv84" &ServiceOutlet_name.datim=="Living Proof Community Health Centre HC III" |
+                    ServiceOutlet.x=="s1VmGXPPQg5" &ServiceOutlet_name.ehmis=="Entebbe UVRI HC II" &ServiceOutlet.y=="vzizzQll5po" &ServiceOutlet_name.datim=="Entebbe Uvri Health Centre II" |
+                    ServiceOutlet.x=="Y3hpndpv6cR" &ServiceOutlet_name.ehmis=="Muhooti Barraccks HC III" &ServiceOutlet.y=="UiGAy9v6yEq" &ServiceOutlet_name.datim=="Muhooti Baracks Health Centre II"))
+ 
+ # temporary merge of matches gotten from eHMIS_DATIM4U_orgunit_ToBeMatched_4
+ 
+ gotten_from_ToBeMatched_4_merged <- rbind(eHMIS_DATIM4U_orgunit_Matched_4,eHMIS_DATIM4U_orgunit_Matched_5,eHMIS_DATIM4U_orgunit_Matched_6)
+ 
+ # subsetting eHMIS_DATIM4U_orgunit_ToBeMatched_4 
+ eHMIS_DATIM4U_orgunit_ToBeMatched_5 <- eHMIS_DATIM4U_orgunit_ToBeMatched_4 %>% 
+   dplyr::anti_join(gotten_from_ToBeMatched_4_merged)
+ 
+ # matching takes place here
+ eHMIS_DATIM4U_orgunit_Matched_7 <- eHMIS_DATIM4U_orgunit_ToBeMatched_5 %>%
+   dplyr::filter((ServiceOutlet.x=="amOfrCsmDMr" &ServiceOutlet_name.ehmis=="Luwero Industries Ltd Clinic" &ServiceOutlet.y=="iS89iGcWCmp" &ServiceOutlet_name.datim=="Luwero Industries Ltd Clinic Health Centre II" |
+                    ServiceOutlet.x=="Go1AzZKYcoS" &ServiceOutlet_name.ehmis=="Multicare Medical Centre HC II (Kawempe Division}" &ServiceOutlet.y=="vvCBoqUfq31" &ServiceOutlet_name.datim=="Multicare Medical Centre HCII" |
+                    ServiceOutlet.x=="hLzOQxvRf4P" &ServiceOutlet_name.ehmis=="Rukungiri Blood Collection & Distribution Point" &ServiceOutlet.y=="QDpxXMEKtUn" &ServiceOutlet_name.datim=="Rukungiri Blood Collection Centre" |
+                    ServiceOutlet.x=="nFMZAMrVcca" &ServiceOutlet_name.ehmis=="Asianut Medical Centre" &ServiceOutlet.y=="GBB4IP4O7Gx" &ServiceOutlet_name.datim=="Asianut Medical Centre HCII" |
+                    ServiceOutlet.x=="sUPmMA66xoY" &ServiceOutlet_name.ehmis=="Kichompyo HC II" &ServiceOutlet.y=="MkjixHSlx7x" &ServiceOutlet_name.datim=="Kicompyo Health Center II" |
+                    ServiceOutlet.x=="UNFFbN2I5sE" &ServiceOutlet_name.ehmis=="Lugusuulu HC II" &ServiceOutlet.y=="ux2zhBY1tls" &ServiceOutlet_name.datim=="Lugusulu Health Center II" |
+                    ServiceOutlet.x=="XNtIAeZw6jh" &ServiceOutlet_name.ehmis=="National Leadership institute HC II" &ServiceOutlet.y=="VVQKPBMPxUi" &ServiceOutlet_name.datim=="National Leadership Training Instititute Health Centre II" |
+                    ServiceOutlet.x=="XpJak3aZzRX" &ServiceOutlet_name.ehmis=="AIDS Information Centre (Arua) Special Clinic" &ServiceOutlet.y=="hbCXw0gsfja" &ServiceOutlet_name.datim=="AIDS Information Center Health Centre II" |
+                    ServiceOutlet.x=="ZSC1XbtGdzq" &ServiceOutlet_name.ehmis=="St. Luke HC II" &ServiceOutlet.y=="Y4WeHKnkuiP" &ServiceOutlet_name.datim=="St. Luke Health Care Centre HCII"))
+ 
+ # combine the match subsets together
+ df_list <- mget(ls(pattern="eHMIS_DATIM4U_orgunit_Matched_"))
+ match_subsets_all_together_merged <-data.table::rbindlist(df_list) # filling in missing columns
+ 
+ # select columns
+ eHMIS_DATIM4U_orgunit_matching_all_temp_4 <- match_subsets_all_together_merged %>% 
+      dplyr::select(eHMIS_orgunit_uid=ServiceOutlet.x,DATIM4U_orgunit_uid=ServiceOutlet.y) # renaming of columns takes place at the same time columns are selected.
+ 
+ # combine
+ eHMIS_DATIM4U_orgunit_matching_all_temp_5 <- rbind(eHMIS_DATIM4U_orgunit_matching_all_temp_3, eHMIS_DATIM4U_orgunit_matching_all_temp_4)
+ 
+ # export so far matched to csv
+ data.table::fwrite(eHMIS_DATIM4U_orgunit_matching_all_temp_5,
+                    file="~/Downloads/DATIM4U/DATIM/eHMIS_DATIM4U_orgunit_matching_all_temp_file-03.csv",
+                    row.names = FALSE)
+ 
+ # to continue with manual matching
