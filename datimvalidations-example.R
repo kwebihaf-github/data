@@ -24,7 +24,7 @@ checkDataElementDisaggValidity(data=d,datasets = c("TBcmmtoaCBC","BPEyzcDb8fT","
 checkValueTypeCompliance(d)
 checkNegativeValues(d)
 #FY2020Q2_TX_Combined_Facility_violations <-validateData(data = d, datasets = c("qzVASYuaIey","jKdHXpBfWop","BPEyzcDb8fT","em1U5x9hhXh","mbdbMiLZ4AA"),return_violations_only = TRUE) # for MER 2.4
-FY2020Q2_TX_Combined_Facility_violations <-validateData(data = d, datasets = c("TBcmmtoaCBC","BPEyzcDb8fT","zL8TlPVzEBZ","em1U5x9hhXh", "qHyrHc4zwx4"),return_violations_only = TRUE) # for MER 2.4
+FY2020Q2_TX_Combined_Facility_violations <-validateData(data = d, datasets = c("TBcmmtoaCBC","BPEyzcDb8fT","zL8TlPVzEBZ","em1U5x9hhXh", "qHyrHc4zwx4"),return_violations_only = TRUE) # for MER 2.5
 
 # saving of violations int csv file
 write.csv(FY2020Q2_HTS_TST_Facility_violations,file=here::here("files/violations","FY2020Q2_TX_Combined_Facility_violations.csv"), row.names = FALSE)
