@@ -4,11 +4,14 @@
 install.packages(c("devtools", "here"))
 require(devtools)
 install_github("jason-p-pickering/datim-validation", force=TRUE)
+devtools::install_github(repo = "https://github.com/pepfar-datim/datimutils.git", ref = "master")
+
 
 # loading of datimvalidation package ans secrets file
-require(datimvalidation)
+library(datimvalidation)
 secrets=here::here("files","secrets.json")
-loadSecrets(secrets)
+#loadSecrets(secrets) # this function is deprecated
+datimutils::loginToDATIM(config_path = "/cloud/project/files/secrets.json") # new function for logging into DATIM
 
 # validations
 # for AGYW_PREV indicator, replace the default IM of uid=`HllvX50cXC0` with another IM of uid=`Y14uAWeaYX8` for purposes to go through validations smoothly
