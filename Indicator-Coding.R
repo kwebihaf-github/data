@@ -16,6 +16,8 @@ DSD.lookup<-read.csv(FileDSD, header=TRUE,sep=",",check.names = FALSE,stringsAsF
 TA.lookup  <-read.csv(FileTA, header=TRUE,sep=",",check.names = FALSE,stringsAsFactors=FALSE)
 IM.lookup<-read.csv("https://www.datim.org/api/sqlViews/fgUtV6e9YIX/data.csv", header=TRUE,sep=",",check.names = FALSE,stringsAsFactors=FALSE)
 IM.lookup <- dplyr::select(IM.lookup,"code","uid")
+IM.default <- data.frame(code="HllvX50cXC0",uid="HllvX50cXC0")
+IM.lookup <- rbind(IM.lookup,IM.default)
 colnames(IM.lookup)<-mgsub(c("code","uid"),c("IM_code","attributeOptionCombo"),colnames(IM.lookup))
 
 ## multi find and replace, start
@@ -308,6 +310,7 @@ shaping <-function(file, supporttype, outputfile, ...) {
   }
   #colnames(merge.split)
   #print (sum(as.numeric(as.character(data.m.split$value)),na.rm=T))
+  options(digits = 10) #incase there are decimal values, they will not be rounded
   print (sum(as.numeric(as.character(data.m$value)),na.rm=T))
   print (sum(as.numeric(as.character(ImportReady.aggregate$value))))
   setwd("/cloud/project/")
@@ -578,6 +581,7 @@ shaping_old <-function(file, supporttype, outputfile, ...) {
     write.csv(ImportReady.aggregate,paste0(outputfile,".csv"),row.names = FALSE)
   }
   #colnames(merge.split)
+  options(digits = 10) #incase there are decimal values, they will not be rounded
   print (sum(as.numeric(as.character(data.m.split$value)),na.rm=T))
   #print (sum(as.numeric(as.character(data.m$value)),na.rm=T))
   print (sum(as.numeric(as.character(ImportReady.aggregate$value))))

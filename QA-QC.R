@@ -30,6 +30,8 @@ swapped_orgunits_with_eHMIS <-data.frame(swapped_orgunits_with_eHMIS=as.characte
 
 orgunits_belongs_to_IM <- data.frame(orgunits_belongs_to_IM=as.character(paste(data_Prep$...6,data_Prep$...13, sep = ";") %in% unlist(paste(DAPTS_list$`DATIM ID`,DAPTS_list$`IM Code`, sep = ";")))) # compares concatenated values from data side (pairwise) and the DAPTS list (pairwise)
 
+                                                                 
+has_Duplicate_ServiceOutlets <- data.frame(Duplicates=duplicated(data_Prep[6])) # 6th column contains DATIM orgunit ID
 
 #final dataframe
 data_Prep_Negatives <-cbind(data_Prep,has_neg,Length_Outlet_IDs,has_blanks_IMCode,has_blanks_DATIMOutletID,has_blanks_TypeOfSupport, swapped_orgunits_with_eHMIS,orgunits_belongs_to_IM)
