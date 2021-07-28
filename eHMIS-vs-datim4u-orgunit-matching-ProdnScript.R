@@ -1190,3 +1190,48 @@ data.table::fwrite(eHMIS_DATIM4U_orgunit_matching_all_temp_6,
                    row.names = FALSE)
 
 ## Work on removing duplicates in the column of eHMIS_UID and those that don't match from the duplicates
+
+# Read the file cleaned from duplicates in eHMIS UID column
+rm(list=c("temp", "dataURL"))
+temp = tempfile(fileext = ".xlsx")
+dataURL <- "https://github.com/kwebihaf-github/data/raw/master/eHMIS_DATIM4U_orgunit_matching_all_temp_file-04.xlsx"
+download.file(dataURL, destfile=temp, mode='wb')
+
+CleanedFile_from_duplicates_in_eHMISUID <- readxl::read_excel(temp, sheet =1)
+
+# subset, removing the duplicate columns in eHMIS UID column i.e where column Action_on_eHMIS_orgunit_UID = Remove
+CleanedFile_from_duplicates_in_eHMISUID_2  <- CleanedFile_from_duplicates_in_eHMISUID %>% 
+  dplyr::filter(!grepl("Remove",Action_on_eHMIS_orgunit_UID))
+
+# check for duplicates in datim4U UID column
+
+CleanedFile_from_duplicates_in_eHMISUID_2 %>% 
+  dplyr::group_by(DATIM4U_orgunit_uid) %>%  # group by the column that you want to check for duplicates in
+  dplyr::filter(n()>1)  
+
+# export file for cleaning duplicates in the DATIM4U_orgunit_uid column
+data.table::fwrite(CleanedFile_from_duplicates_in_eHMISUID_2,
+                   file="~/Downloads/DATIM4U/DATIM/eHMIS_DATIM4U_orgunit_matching_all_temp_file-05.csv",
+                   row.names = FALSE)
+
+## Work on removing duplicates in the column of DATIM4U_orgunit_uid and those that don't match from the duplicates
+
+# Read the file cleaned from duplicates in DATIM4U UID column
+rm(list=c("temp", "dataURL"))
+temp = tempfile(fileext = ".xlsx")
+dataURL <- "https://github.com/kwebihaf-github/data/raw/master/eHMIS_DATIM4U_orgunit_matching_all_temp_file-05.xlsx"
+download.file(dataURL, destfile=temp, mode='wb')
+
+CleanedFile_from_duplicates_in_datim4uUID <- readxl::read_excel(temp, sheet =1)
+
+# subset, removing the duplicate columns in datim4u UID column i.e where column Action_on_DATIM4U_orgunit_UID = Remove
+CleanedFile_from_duplicates_in_datim4uUID_2  <- CleanedFile_from_duplicates_in_datim4uUID %>% 
+  dplyr::filter(!grepl("Remove",Action_on_DATIM4U_orgunit_UID)) %>% 
+  dplyr::select(eHMIS_orgunit_uid,DATIM4U_orgunit_uid) # select wanted columns by leaving out the unwanted ones
+
+# export file after cleaning duplicates in columns of eHMIS UID and datim4u UID
+data.table::fwrite(CleanedFile_from_duplicates_in_datim4uUID_2,
+                   file="~/Downloads/DATIM4U/DATIM/eHMIS_DATIM4U_orgunit_matching_all_temp_file-06.csv",
+                   row.names = FALSE)
+
+## Use the matching in DAPTS list as an addition
