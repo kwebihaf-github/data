@@ -1,5 +1,5 @@
 # Install Packages
-.packages <- c("here", "dplyr", "data.table","tidyr", "fuzzyjoin","stringdist","rstudioapi")
+.packages <- c("here", "dplyr", "data.table","tidyr", "fuzzyjoin","stringdist","rstudioapi","openxlsx")
 
 # Install CRAN packages (if not already installed)
 .inst <- .packages %in% installed.packages()
@@ -1235,3 +1235,27 @@ data.table::fwrite(CleanedFile_from_duplicates_in_datim4uUID_2,
                    row.names = FALSE)
 
 ## Use the matching in DAPTS list as an addition
+
+# Read the DAPTS file
+rm(list=c("temp", "dataURL"))
+temp = tempfile(fileext = ".xlsx")
+dataURL <- "https://github.com/kwebihaf-github/data/raw/master/29_%20FY2021%20DAPTS%20ME%20Version_9th-06-2021.xlsx"
+download.file(dataURL, destfile=temp, mode='wb')
+
+#readxl::excel_sheets(temp)
+DAPTS_list <- readxl::read_excel(temp, sheet ="HF DAPTS LIST to use in FY2021", range="A3:Z2250")
+
+DAPTS_list_2 <- DAPTS_list %>% 
+              dplyr::select("Revised DHIS2 ID","DATIM ID") %>% 
+              dplyr::anti_join(CleanedFile_from_duplicates_in_datim4uUID_2, by=c("Revised DHIS2 ID"="eHMIS_orgunit_uid")) %>%  # find ids that are in DAPTS list and not in the Matched (CleanedFile_from_duplicates_in_datim4uUID_2) dataframe
+              dplyr::filter(!is.na(`Revised DHIS2 ID`))  # remove blanks
+
+# combine the Matched ones with the one from DAPTS list
+
+DAPTS_list_3 <-data.table::rbindlist(list(CleanedFile_from_duplicates_in_datim4uUID_2,DAPTS_list_2))
+
+  
+# export file after merging DAPTS List with the already Matched ones
+openxlsx::write.xlsx(DAPTS_list_3,
+                   file="~/Downloads/DATIM4U/DATIM/eHMIS_DATIM4U_orgunit_matching_all_temp_file-07.xlsx"
+                   )
