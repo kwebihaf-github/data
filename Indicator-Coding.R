@@ -100,7 +100,9 @@ shaping <-function(file, supporttype, outputfile, ...) {
     #row_sub = dplyr::filter(ImportReady, value != 0)
     #ImportReady <- ImportReady[row_sub,]
     ImportReady <- dplyr::filter(ImportReady, value != 0)
-    ImportReady.aggregate <- plyr::ddply(ImportReady, c("dataElement","period","orgUnit","categoryOptionCombo","attributeOptionCombo"), plyr::summarize, value = sum(as.numeric(as.character(value))))
+    #ImportReady.aggregate <- plyr::ddply(ImportReady, c("dataElement","period","orgUnit","categoryOptionCombo","attributeOptionCombo"), plyr::summarize, value = sum(as.numeric(as.character(value))))
+    ImportReady$value <- as.numeric(as.character(ImportReady$value))
+    ImportReady.aggregate <- aggregate(value ~ dataElement+period+orgUnit+categoryOptionCombo+attributeOptionCombo, data=ImportReady, FUN = sum) # aggregating of rows such as Military Uganda rows
     ImportReady.aggregate <- dplyr::select(ImportReady.aggregate,
                                            "dataElement","period","orgUnit","categoryOptionCombo","attributeOptionCombo","value")
     #ImportReady.aggregate <- dplyr::select(ImportReady.aggregate,
@@ -146,7 +148,9 @@ shaping <-function(file, supporttype, outputfile, ...) {
     #row_sub = apply(ImportReady, 1, function(row) all(row !=0 ))
     ImportReady <- dplyr::filter(ImportReady, value != 0)
     #ImportReady <- ImportReady[row_sub,]
-    ImportReady.aggregate <- plyr::ddply(ImportReady, c("dataElement","period","orgUnit","categoryOptionCombo","attributeOptionCombo"), plyr::summarize, value = sum(as.numeric(as.character(value))))
+    #ImportReady.aggregate <- plyr::ddply(ImportReady, c("dataElement","period","orgUnit","categoryOptionCombo","attributeOptionCombo"), plyr::summarize, value = sum(as.numeric(as.character(value))))
+    ImportReady$value <- as.numeric(as.character(ImportReady$value))
+    ImportReady.aggregate <- aggregate(value ~ dataElement+period+orgUnit+categoryOptionCombo+attributeOptionCombo, data=ImportReady, FUN = sum) # aggregating of rows such as Military Uganda rows
     ImportReady.aggregate <- dplyr::select(ImportReady.aggregate,
                                            "dataElement","period","orgUnit","categoryOptionCombo","attributeOptionCombo","value")
     #write.csv(ImportReady.aggregate,file=paste0('/cloud/project/files',outputfile,".csv"),row.names = FALSE)
@@ -171,8 +175,10 @@ shaping <-function(file, supporttype, outputfile, ...) {
     #ImportReady <- ImportReady[-row(ImportReady)[ImportReady == 0],]
     row_sub = apply(ImportReady, 1, function(row) all(row !=0 ))
     ImportReady <- ImportReady[row_sub,]
-    ImportReady.aggregate <- plyr::ddply(ImportReady, c("dataElement","period","orgUnit","categoryOptionCombo","attributeOptionCombo"), plyr::summarize, value = sum(as.numeric(as.character(value))))
-    #ImportReady.aggregate <- dplyr::select(ImportReady.aggregate,
+    #ImportReady.aggregate <- plyr::ddply(ImportReady, c("dataElement","period","orgUnit","categoryOptionCombo","attributeOptionCombo"), plyr::summarize, value = sum(as.numeric(as.character(value))))
+    ImportReady$value <- as.numeric(as.character(ImportReady$value))
+    ImportReady.aggregate <- aggregate(value ~ dataElement+period+orgUnit+categoryOptionCombo+attributeOptionCombo, data=ImportReady, FUN = sum) # aggregating of rows such as Military Uganda rows
+                    #ImportReady.aggregate <- dplyr::select(ImportReady.aggregate,
     #    "dataElement","period","orgUnit","categoryOptionCombo","attributeOptionCombo","value")
     #write.csv(ImportReady.aggregate,file=paste0('/cloud/project/files',outputfile,".csv"),row.names = FALSE)
     write.csv(ImportReady.aggregate,paste0(outputfile,".csv"),row.names = FALSE)
@@ -197,8 +203,10 @@ shaping <-function(file, supporttype, outputfile, ...) {
     #ImportReady <- ImportReady[-row(ImportReady)[ImportReady == 0],]
     row_sub = apply(ImportReady, 1, function(row) all(row !=0 ))
     ImportReady <- ImportReady[row_sub,]
-    ImportReady.aggregate <- plyr::ddply(ImportReady, c("dataElement","period","orgUnit","categoryOptionCombo","attributeOptionCombo"), plyr::summarize, value = sum(as.numeric(as.character(value))))
-    #ImportReady.aggregate <- dplyr::select(ImportReady.aggregate,
+    #ImportReady.aggregate <- plyr::ddply(ImportReady, c("dataElement","period","orgUnit","categoryOptionCombo","attributeOptionCombo"), plyr::summarize, value = sum(as.numeric(as.character(value))))
+    ImportReady$value <- as.numeric(as.character(ImportReady$value))
+    ImportReady.aggregate <- aggregate(value ~ dataElement+period+orgUnit+categoryOptionCombo+attributeOptionCombo, data=ImportReady, FUN = sum) # aggregating of rows such as Military Uganda rows
+                    #ImportReady.aggregate <- dplyr::select(ImportReady.aggregate,
     #    "dataElement","period","orgUnit","categoryOptionCombo","attributeOptionCombo","value")
     #write.csv(ImportReady.aggregate,file=paste0('/cloud/project/files',outputfile,".csv"),row.names = FALSE)
     write.csv(ImportReady.aggregate,paste0(outputfile,".csv"),row.names = FALSE)
@@ -223,8 +231,10 @@ shaping <-function(file, supporttype, outputfile, ...) {
     #ImportReady <- ImportReady[-row(ImportReady)[ImportReady == 0],]
     row_sub = apply(ImportReady, 1, function(row) all(row !=0 ))
     ImportReady <- ImportReady[row_sub,]
-    ImportReady.aggregate <- plyr::ddply(ImportReady, c("dataElement","period","orgUnit","categoryOptionCombo","attributeOptionCombo"), plyr::summarize, value = sum(as.numeric(as.character(value))))
-    #ImportReady.aggregate <- dplyr::select(ImportReady.aggregate,
+    #ImportReady.aggregate <- plyr::ddply(ImportReady, c("dataElement","period","orgUnit","categoryOptionCombo","attributeOptionCombo"), plyr::summarize, value = sum(as.numeric(as.character(value))))
+    ImportReady$value <- as.numeric(as.character(ImportReady$value))
+    ImportReady.aggregate <- aggregate(value ~ dataElement+period+orgUnit+categoryOptionCombo+attributeOptionCombo, data=ImportReady, FUN = sum) # aggregating of rows such as Military Uganda rows
+                    #ImportReady.aggregate <- dplyr::select(ImportReady.aggregate,
     #    "dataElement","period","orgUnit","categoryOptionCombo","attributeOptionCombo","value")
     #write.csv(ImportReady.aggregate,file=paste0('/cloud/project/files',outputfile,".csv"),row.names = FALSE)
     write.csv(ImportReady.aggregate,paste0(outputfile,".csv"),row.names = FALSE)
@@ -249,8 +259,10 @@ shaping <-function(file, supporttype, outputfile, ...) {
     #ImportReady <- ImportReady[-row(ImportReady)[ImportReady == 0],]
     row_sub = apply(ImportReady, 1, function(row) all(row !=0 ))
     ImportReady <- ImportReady[row_sub,]
-    ImportReady.aggregate <- plyr::ddply(ImportReady, c("dataElement","period","orgUnit","categoryOptionCombo","attributeOptionCombo"), plyr::summarize, value = sum(as.numeric(as.character(value))))
-    #ImportReady.aggregate <- dplyr::select(ImportReady.aggregate,
+    #ImportReady.aggregate <- plyr::ddply(ImportReady, c("dataElement","period","orgUnit","categoryOptionCombo","attributeOptionCombo"), plyr::summarize, value = sum(as.numeric(as.character(value))))
+    ImportReady$value <- as.numeric(as.character(ImportReady$value))
+    ImportReady.aggregate <- aggregate(value ~ dataElement+period+orgUnit+categoryOptionCombo+attributeOptionCombo, data=ImportReady, FUN = sum) # aggregating of rows such as Military Uganda rows
+                    #ImportReady.aggregate <- dplyr::select(ImportReady.aggregate,
     #    "dataElement","period","orgUnit","categoryOptionCombo","attributeOptionCombo","value")
     #write.csv(ImportReady.aggregate,file=paste0('/cloud/project/files',outputfile,".csv"),row.names = FALSE)
     write.csv(ImportReady.aggregate,paste0(outputfile,".csv"),row.names = FALSE)
@@ -275,8 +287,10 @@ shaping <-function(file, supporttype, outputfile, ...) {
     #ImportReady <- ImportReady[-row(ImportReady)[ImportReady == 0],]
     row_sub = apply(ImportReady, 1, function(row) all(row !=0 ))
     ImportReady <- ImportReady[row_sub,]
-    ImportReady.aggregate <- plyr::ddply(ImportReady, c("dataElement","period","orgUnit","categoryOptionCombo","attributeOptionCombo"), plyr::summarize, value = sum(as.numeric(as.character(value))))
-    #ImportReady.aggregate <- dplyr::select(ImportReady.aggregate,
+    #ImportReady.aggregate <- plyr::ddply(ImportReady, c("dataElement","period","orgUnit","categoryOptionCombo","attributeOptionCombo"), plyr::summarize, value = sum(as.numeric(as.character(value))))
+    ImportReady$value <- as.numeric(as.character(ImportReady$value))
+    ImportReady.aggregate <- aggregate(value ~ dataElement+period+orgUnit+categoryOptionCombo+attributeOptionCombo, data=ImportReady, FUN = sum) # aggregating of rows such as Military Uganda rows
+                    #ImportReady.aggregate <- dplyr::select(ImportReady.aggregate,
     #    "dataElement","period","orgUnit","categoryOptionCombo","attributeOptionCombo","value")
     #write.csv(ImportReady.aggregate,file=paste0('/cloud/project/files',outputfile,".csv"),row.names = FALSE)
     write.csv(ImportReady.aggregate,paste0(outputfile,".csv"),row.names = FALSE)
@@ -302,8 +316,10 @@ shaping <-function(file, supporttype, outputfile, ...) {
     #ImportReady <- ImportReady[-row(ImportReady)[ImportReady == 0],]
     row_sub = apply(ImportReady, 1, function(row) all(row !=0 ))
     ImportReady <- ImportReady[row_sub,]
-    ImportReady.aggregate <- plyr::ddply(ImportReady, c("dataElement","period","orgUnit","categoryOptionCombo","attributeOptionCombo"), plyr::summarize, value = sum(as.numeric(as.character(value))))
-    #ImportReady.aggregate <- dplyr::select(ImportReady.aggregate,
+    #ImportReady.aggregate <- plyr::ddply(ImportReady, c("dataElement","period","orgUnit","categoryOptionCombo","attributeOptionCombo"), plyr::summarize, value = sum(as.numeric(as.character(value))))
+    ImportReady$value <- as.numeric(as.character(ImportReady$value))
+    ImportReady.aggregate <- aggregate(value ~ dataElement+period+orgUnit+categoryOptionCombo+attributeOptionCombo, data=ImportReady, FUN = sum) # aggregating of rows such as Military Uganda rows
+                    #ImportReady.aggregate <- dplyr::select(ImportReady.aggregate,
     #    "dataElement","period","orgUnit","categoryOptionCombo","attributeOptionCombo","value")
     #write.csv(ImportReady.aggregate,file=paste0('/cloud/project/files',outputfile,".csv"),row.names = FALSE)
     write.csv(ImportReady.aggregate,paste0(outputfile,".csv"),row.names = FALSE)
