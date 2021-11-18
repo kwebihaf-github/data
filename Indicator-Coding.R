@@ -94,12 +94,13 @@ shaping <-function(file, supporttype, outputfile, ...) {
     #ImportReady <- ImportReady[c(1,3,4,2,6,5)]
     #ImportReady <- ImportReady[c("dataElement","period","orgUnit","categoryOptionCombo","attributeOptionCombo","value")]
     ImportReady <- merge.split
-    ImportReady[is.na(ImportReady)] <- 0
+    #ImportReady[is.na(ImportReady)] <- 0 # where there are blanks replace with zeroes
+    ImportReady <- ImportReady[!(is.na(ImportReady$value) | ImportReady$value==""), ] # remove blanks
     #ImportReady <- ImportReady[-row(ImportReady)[ImportReady == 0],]
     #row_sub = apply(ImportReady, 1, function(row) all(row !=0 ))
     #row_sub = dplyr::filter(ImportReady, value != 0)
     #ImportReady <- ImportReady[row_sub,]
-    ImportReady <- dplyr::filter(ImportReady, value != 0)
+    #ImportReady <- dplyr::filter(ImportReady, value != 0) # remove where there are zeroes
     #ImportReady.aggregate <- plyr::ddply(ImportReady, c("dataElement","period","orgUnit","categoryOptionCombo","attributeOptionCombo"), plyr::summarize, value = sum(as.numeric(as.character(value))))
     ImportReady$value <- as.numeric(as.character(ImportReady$value))
     ImportReady.aggregate <- aggregate(value ~ dataElement+period+orgUnit+categoryOptionCombo+attributeOptionCombo, data=ImportReady, FUN = sum) # aggregating of rows such as Military Uganda rows
@@ -143,10 +144,11 @@ shaping <-function(file, supporttype, outputfile, ...) {
     #ImportReady<- (merge(DSD, Mechanism.lookup, by = 'IM_code'))
     #ImportReady$IM_code <- NULL
     ImportReady <- DSD
-    ImportReady[is.na(ImportReady)] <- 0
+    #ImportReady[is.na(ImportReady)] <- 0 # where there are blanks replace with zeroes
+    ImportReady <- ImportReady[!(is.na(ImportReady$value) | ImportReady$value==""), ] # remove blanks
     #ImportReady <- ImportReady[-row(ImportReady)[ImportReady == 0],]
     #row_sub = apply(ImportReady, 1, function(row) all(row !=0 ))
-    ImportReady <- dplyr::filter(ImportReady, value != 0)
+    #ImportReady <- dplyr::filter(ImportReady, value != 0) # remove where there are zeroes
     #ImportReady <- ImportReady[row_sub,]
     #ImportReady.aggregate <- plyr::ddply(ImportReady, c("dataElement","period","orgUnit","categoryOptionCombo","attributeOptionCombo"), plyr::summarize, value = sum(as.numeric(as.character(value))))
     ImportReady$value <- as.numeric(as.character(ImportReady$value))
