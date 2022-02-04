@@ -19,10 +19,12 @@ datimutils::loginToDATIM(config_path = "/cloud/project/files/secrets.json") # ne
 datafile<-here::here("files","02.DATIM4U.FY2020Q2.ImportReady.TX_COMBINED.csv")
 d<-d2Parser(filename = datafile ,type = "csv")
 #checkDataElementOrgunitValidity(data = d,datasets = c("qzVASYuaIey","jKdHXpBfWop","BPEyzcDb8fT","em1U5x9hhXh", "mbdbMiLZ4AA")) # for MER 2.4
-checkDataElementOrgunitValidity(data = d,datasets = c("TBcmmtoaCBC","BPEyzcDb8fT","zL8TlPVzEBZ","em1U5x9hhXh", "qHyrHc4zwx4")) # for MER 2.5
+#checkDataElementOrgunitValidity(data = d,datasets = c("TBcmmtoaCBC","BPEyzcDb8fT","zL8TlPVzEBZ","em1U5x9hhXh", "qHyrHc4zwx4")) # for MER 2.5
+checkDataElementOrgunitValidity(data = d,datasets = c("HfhTPdnRWES","HrozVxNYFJy","BHlhyPmRTUY","GEBcXhZw0fD","MGNVwVicMVm")) # for MER 2.6
 
 #checkDataElementDisaggValidity(data=d,datasets = c("qzVASYuaIey","jKdHXpBfWop","BPEyzcDb8fT","em1U5x9hhXh", "mbdbMiLZ4AA")) # for MER 2.4
-checkDataElementDisaggValidity(data=d,datasets = c("TBcmmtoaCBC","BPEyzcDb8fT","zL8TlPVzEBZ","em1U5x9hhXh", "qHyrHc4zwx4")) # for MER 2.5
+#checkDataElementDisaggValidity(data=d,datasets = c("TBcmmtoaCBC","BPEyzcDb8fT","zL8TlPVzEBZ","em1U5x9hhXh", "qHyrHc4zwx4")) # for MER 2.5
+checkDataElementDisaggValidity(data=d,datasets = c("HfhTPdnRWES","HrozVxNYFJy","BHlhyPmRTUY","GEBcXhZw0fD","MGNVwVicMVm")) # for MER 2.6
 
 checkValueTypeCompliance(d)
 checkNegativeValues(d)
