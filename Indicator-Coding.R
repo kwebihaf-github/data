@@ -600,9 +600,11 @@ shaping_old <-function(file, supporttype, outputfile, ...) {
   }
   #colnames(merge.split)
   options(digits = 10) #incase there are decimal values, they will not be rounded
-  print (sum(as.numeric(as.character(data.m.split$value)),na.rm=T))
+  #print (sum(as.numeric(as.character(data.m.split$value)),na.rm=T))  # used this one previously
+  print(formatC (sum(as.numeric(as.character(data.m$value)),na.rm=T), format="f", big.mark = ",", digits=0))
   #print (sum(as.numeric(as.character(data.m$value)),na.rm=T))
-  print (sum(as.numeric(as.character(ImportReady.aggregate$value))))
+  #print (sum(as.numeric(as.character(ImportReady.aggregate$value)))) # used this one previously
+  print(formatC (sum(as.numeric(as.character(ImportReady.aggregate$value))), format="f", big.mark = ",", digits=0))
   setwd("/cloud/project/")
   #assertthat::assert_that(sum(as.numeric(as.character(data.m.split$value)),na.rm=T)==sum(as.numeric(as.character(ImportReady.aggregate$value))))
   #sum(as.numeric(as.character(ImportReady$value)))
