@@ -9,16 +9,6 @@ shaping("/cloud/project/files/for-codings/FY2020Q1/FY2020Q1_TB_STAT_ReImports-Al
 
 ## Running the shaping function, howto, end
 
-# lookup files: DSD, TA & IMs
-FileDSD <- "/cloud/project/files/Facility-DSD-Lookup.csv"
-FileTA <- "/cloud/project/files/Community-TA-Lookup.csv"
-DSD.lookup<-read.csv(FileDSD, header=TRUE,sep=",",check.names = FALSE,stringsAsFactors=FALSE)
-TA.lookup  <-read.csv(FileTA, header=TRUE,sep=",",check.names = FALSE,stringsAsFactors=FALSE)
-IM.lookup<-read.csv("https://www.datim.org/api/sqlViews/fgUtV6e9YIX/data.csv", header=TRUE,sep=",",check.names = FALSE,stringsAsFactors=FALSE)
-IM.lookup <- dplyr::select(IM.lookup,"code","uid")
-IM.default <- data.frame(code="HllvX50cXC0",uid="HllvX50cXC0")
-IM.lookup <- rbind(IM.lookup,IM.default)
-colnames(IM.lookup)<-mgsub(c("code","uid"),c("IM_code","attributeOptionCombo"),colnames(IM.lookup))
 
 ## multi find and replace, start
 mgsub <-function(pattern, replacement, x, ...) {
@@ -34,6 +24,16 @@ mgsub <-function(pattern, replacement, x, ...) {
 
 ## multi find and replace, end
 
+# lookup files: DSD, TA & IMs
+FileDSD <- "/cloud/project/files/Facility-DSD-Lookup.csv"
+FileTA <- "/cloud/project/files/Community-TA-Lookup.csv"
+DSD.lookup<-read.csv(FileDSD, header=TRUE,sep=",",check.names = FALSE,stringsAsFactors=FALSE)
+TA.lookup  <-read.csv(FileTA, header=TRUE,sep=",",check.names = FALSE,stringsAsFactors=FALSE)
+IM.lookup<-read.csv("https://www.datim.org/api/sqlViews/fgUtV6e9YIX/data.csv", header=TRUE,sep=",",check.names = FALSE,stringsAsFactors=FALSE)
+IM.lookup <- dplyr::select(IM.lookup,"code","uid")
+IM.default <- data.frame(code="HllvX50cXC0",uid="HllvX50cXC0")
+IM.lookup <- rbind(IM.lookup,IM.default)
+colnames(IM.lookup)<-mgsub(c("code","uid"),c("IM_code","attributeOptionCombo"),colnames(IM.lookup))
 
 #install.packages(c("data.table","reshape2","tidyr","plyr","dplyr"))
 shaping <-function(file, supporttype, outputfile, ...) {
